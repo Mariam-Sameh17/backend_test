@@ -1,0 +1,355 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const validations = require('../utilis/validations');
+const sharp = require('sharp');
+
+const itemPhoto = async (req) => {
+  if (!req.file) return;
+  req.file.filename = `${req.body.name}.jpeg`;
+
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`images/items/${req.file.filename}`);
+};
+
+const staffPhoto = async (req) => {
+  if (!req.file) return;
+  req.file.filename = `${req.body.userName}.jpeg`;
+
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`images/users/${req.file.filename}`);
+};
+
+const getRestId = async (req) => {
+  const { restaurantId } = await prisma.Restaurant.findFirst({
+    where: {
+      managerID: req.user.userName,
+    },
+    select: {
+      restaurantId: true,
+    },
+  });
+  return restaurantId;
+};
+
+exports.addItems = async (req, res) => {
+  try {
+    const itemData = validations.validateItems(req);
+    const restaurantId = await getRestId(req);
+    const item = await prisma.menuItems.create({
+      data: {
+        ...itemData,
+        photo: req.file ? `images/items/${req.body.name}` : null,
+        finalPrice: itemData.price,
+        restaurantId,
+      },
+    });
+    itemPhoto(req);
+    res.status(201).json({
+      status: 'success',
+      item,
+    });
+  } catch (err) {
+    let message;
+    if (err.code === 'P2002') {
+      message = 'There is already a menu item have this name';
+    }
+
+    res.status(400).json({
+      status: 'fail',
+      message: message || err.message,
+    });
+  }
+};
+
+exports.setItemDiscount = async (req, res) => {
+  try {
+    if (!req.body.name)
+      return res.status(400).json({
+        status: 'fail',
+        message: 'You should select an item ',
+      });
+
+    if (!req.body.discount || isNaN(req.body.discount))
+      return res.status(400).json({
+        status: 'fail',
+        message:
+          'You should enter the discount percentage and make sure it is a number',
+      });
+
+    const restaurantId = await getRestId(req);
+
+    const { price } = await prisma.menuItems.findUnique({
+      where: {
+        name_restaurantId: {
+          name: req.body.name,
+          restaurantId,
+        },
+      },
+      select: {
+        price: true,
+      },
+    });
+
+    const item = await prisma.menuItems.update({
+      where: {
+        name_restaurantId: { name: req.body.name, restaurantId },
+      },
+      data: {
+        discount: req.body.discount,
+        finalPrice: price - (req.body.discount / 100) * price,
+      },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      item,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.getMenu = async (req, res) => {
+  try {
+    const restaurantId = await getRestId(req);
+
+    const menu = await prisma.menuItems.findMany({
+      where: {
+        restaurantId,
+      },
+    });
+    res.status(200).json({
+      status: 'success',
+      menu,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.getOrders = async (req, res) => {
+  try {
+    const restaurantId = await getRestId(req);
+
+    const orders = await prisma.orders.findMany({
+      where: {
+        restaurantId,
+      },
+    });
+    res.status(200).json({
+      status: 'success',
+      orders,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.addKitchenStaff = async (req, res) => {
+  try {
+    const staffData = await validations.validateUser(req);
+    const restaurantId = await getRestId(req);
+    const kitchenStaff = await prisma.users.create({
+      data: {
+        ...staffData,
+        type: 'k',
+        photo: req.file ? `images/users/${req.body.userName}` : null,
+        kitchenStaff: {
+          create: {
+            restaurantId,
+          },
+        },
+      },
+      include: {
+        kitchenStaff: true,
+      },
+    });
+    staffPhoto(req);
+    res.status(201).json({
+      status: 'success',
+      kitchenStaff,
+    });
+  } catch (err) {
+    let message;
+    if (err.code === 'P2002') {
+      message = 'This UserName already exist';
+    }
+
+    res.status(400).json({
+      status: 'fail',
+      message: message || err.message,
+    });
+  }
+};
+
+exports.createSubscription = async (req, res) => {
+  try {
+    const restaurantID = await getRestId(req);
+    const subData = validations.validateSub(req);
+    const subscription = await prisma.Subscription.create({
+      data: {
+        ...subData,
+        restaurantID,
+      },
+    });
+    res.status(201).json({
+      status: 'success',
+      subscription,
+    });
+  } catch (err) {
+    if (err.code === 'P2002') {
+      err.message = 'This subscription name already exist';
+    }
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.deleteSubscription = async (req, res) => {
+  try {
+    if (!req.body.name) throw new Error('select a plan');
+    const restaurantId = await getRestId(req);
+
+    const deleted = await prisma.Subscription.delete({
+      where: {
+        planName_restaurantID: {
+          planName: req.body.name,
+          restaurantID: restaurantId,
+        },
+      },
+    });
+    if (deleted)
+      res.status(200).json({
+        status: 'success',
+      });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.createCoupon = async (req, res) => {
+  try {
+    const restaurantID = await getRestId(req);
+    const couponData = validations.validateCoupon(req);
+    const coupon = await prisma.Coupons.create({
+      data: {
+        ...couponData,
+        restaurantID,
+      },
+    });
+    res.status(201).json({
+      status: 'success',
+      coupon,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.stats = async (req, res) => {
+  const restaurantId = await getRestId(req);
+
+  const items = await prisma.orderItems.groupBy({
+    by: ['itemName'],
+    _sum: { quantity: true },
+    orderBy: {
+      _sum: { quantity: 'desc' },
+    },
+    where: {
+      restaurantId,
+    },
+  });
+  const names = items.map((i) => i.itemName);
+  const itemsData = await prisma.menuItems.findMany({
+    where: {
+      restaurantId,
+      name: { in: names },
+    },
+  });
+
+  const now = new Date();
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(now.getDate() - 7);
+
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  const endOfLastMonth = startOfThisMonth;
+
+  const startOfLastWeek = new Date();
+  startOfLastWeek.setDate(now.getDate() - 14);
+
+  const ordersPerSevenDays = await prisma.orders.groupBy({
+    by: ['orderTime'],
+    _sum: { itemsPrice: true },
+    _count: { orderId: true },
+    where: {
+      orderTime: {
+        gt: sevenDaysAgo,
+        lte: now,
+      },
+    },
+  });
+
+  const revenuePerSevenDays = ordersPerSevenDays.reduce((sum, o) => {
+    sum += parseFloat(o._sum.itemsPrice);
+    return sum;
+  }, 0);
+
+  const monthRevenue = await prisma.orders.aggregate({
+    _sum: { itemsPrice: true },
+    where: {
+      orderTime: {
+        gt: startOfThisMonth,
+        lte: now,
+      },
+    },
+  });
+
+  const lastMonthRevenue = await prisma.orders.aggregate({
+    _sum: { itemsPrice: true },
+    where: {
+      orderTime: {
+        gt: startOfLastWeek,
+        lte: endOfLastMonth,
+      },
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      items,
+      itemsData,
+      ordersPerSevenDays,
+      revenuePerSevenDays,
+      monthRevenue,
+      lastMonthRevenue,
+    },
+  });
+};

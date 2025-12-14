@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("CONNECTION")
+}
+
+model Coupons {
+  couponId           Int                  @id(map: "PK__Coupons__A2AF8D54920A906E") @default(autoincrement())
+  restaurantID       Int
+  amount             Decimal              @db.Decimal(10, 2)
+  available_uses     Int
+  Restaurant         Restaurant           @relation(fields: [restaurantID], references: [restaurantId], onUpdate: NoAction, map: "FK__Coupons__restaur__02084FDA")
+  paymentWithCoupons paymentWithCoupons[]
+}
+
+model customerAddress {
+  location   String @db.VarChar(100)
+  customerId String @db.NVarChar(50)
+  Customer   Users  @relation(fields: [customerId], references: [userName], onDelete: Cascade, onUpdate: NoAction, map: "FK__customerA__custo__3A81B327")
+
+  @@id([location, customerId], map: "PK__customer__8A4BFCEA1FA4AC84")
+}
+
+model customerSubscription {
+  status                  String?                   @db.VarChar(20)
+  startDate               DateTime?
+  subscriptionId          String                    @db.VarChar(50)
+  restaurantID            Int
+  customerId              String                    @db.NVarChar(50)
+  paymentId               Int?
+  Customer                Users                     @relation(fields: [customerId], references: [userName], onDelete: Cascade, onUpdate: NoAction, map: "FK__customerS__custo__114A936A")
+  Payment                 Payment?                  @relation(fields: [paymentId], references: [paymentId], onDelete: NoAction, onUpdate: NoAction, map: "FK__customerS__payme__0F624AF8")
+  Subscription            Subscription              @relation(fields: [subscriptionId, restaurantID], references: [planName, restaurantID], onDelete: Cascade, onUpdate: NoAction, map: "FK__customerSubscrip__17F790F9")
+  paymentWithSubscription paymentWithSubscription[]
+
+  @@id([customerId, subscriptionId, restaurantID], map: "PK__customer__83B8E629EED55C4D")
+}
+
+model deliveryChat {
+  messageId Int      @id(map: "PK__delivery__4808B9938E94929F") @default(autoincrement())
+  message   String   @db.VarChar(100)
+  timeSent  DateTime
+  status    String   @db.VarChar(20)
+  SRFlag    String   @db.Char(1)
+  orderId   Int?
+  Orders    Orders?  @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction, map: "FK__deliveryC__order__0D7A0286")
+}
+
+model deliveryPerson {
+  userName        String            @id(map: "PK__delivery__66DCF95DFDBAC451") @db.NVarChar(50)
+  bankId          String            @db.VarChar(20)
+  vehicleType     String            @db.NVarChar(50)
+  licenseNumber   String            @db.VarChar(20)
+  id              String            @unique(map: "UQ__delivery__3213E83E07DAF0E9") @db.VarChar(20)
+  Users           Users             @relation(fields: [userName], references: [userName], onDelete: Cascade, onUpdate: NoAction, map: "FK__deliveryP__userN__5AEE82B9")
+  onDeliverOrders onDeliverOrders[]
+}
+
+model kitchenStaff {
+  userName        String            @id(map: "PK__kitchenS__66DCF95DB3D4BE00") @db.NVarChar(50)
+  restaurantId    Int
+  Restaurant      Restaurant        @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade, onUpdate: NoAction, map: "FK__kitchenSt__resta__59FA5E80")
+  Users           Users             @relation(fields: [userName], references: [userName], onUpdate: NoAction, map: "FK__kitchenSt__userN__5629CD9C")
+  onPrepareOrders onPrepareOrders[]
+}
+
+model menuItems {
+  name            String       @db.VarChar(20)
+  photo           String?      @db.NVarChar(100)
+  menuCategory    String       @db.VarChar(50)
+  price           Decimal      @db.Decimal(10, 2)
+  finalPrice      Decimal?     @db.Decimal(10, 2)
+  availableAmount Int?
+  description     String?      @db.VarChar(200)
+  discount        Decimal?     @db.Decimal(10, 2)
+  restaurantId    Int
+  Restaurant      Restaurant   @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade, onUpdate: NoAction, map: "FK__menuItems__resta__4F7CD00D")
+  orderItems      orderItems[]
+
+  @@id([name, restaurantId], map: "PK__menuItem__627CAFB9C37E1493")
+}
+
+model onDeliverOrders {
+  deliveryTime   Decimal?       @db.Decimal(10, 2)
+  deliveryId     String         @db.NVarChar(50)
+  tipAmount      Decimal?       @db.Decimal(10, 2)
+  orderId        Int            @id(map: "PK__onDelive__0809335DD67584C1")
+  deliveryPerson deliveryPerson @relation(fields: [deliveryId], references: [userName], onUpdate: NoAction, map: "FK__onDeliver__deliv__6754599E")
+  Orders         Orders         @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction, map: "FK__onDeliver__order__68487DD7")
+}
+
+model onPrepareOrders {
+  preparingTime  Decimal?     @db.Decimal(10, 2)
+  kitchenStaffId String       @db.NVarChar(50)
+  orderId        Int          @id(map: "PK__onPrepar__0809335D8FFD6376")
+  kitchenStaff   kitchenStaff @relation(fields: [kitchenStaffId], references: [userName], onUpdate: NoAction, map: "FK__onPrepare__kitch__6B24EA82")
+  Orders         Orders       @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction, map: "FK__onPrepare__order__6C190EBB")
+}
+
+model orderItems {
+  quantity     Int
+  orderId      Int
+  itemName     String     @db.VarChar(20)
+  restaurantId Int?
+  Orders       Orders     @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction, map: "FK__orderItem__order__6EF57B66")
+  menuItems    menuItems? @relation(fields: [itemName, restaurantId], references: [name, restaurantId], onDelete: Cascade, onUpdate: NoAction, map: "FK__orderItems__6FE99F9F")
+
+  @@id([orderId, itemName], map: "PK__orderIte__42365EB542166D61")
+}
+
+model orderReview {
+  deliverRating    Decimal? @db.Decimal(10, 2)
+  restaurantRating Decimal? @db.Decimal(10, 2)
+  customerId       String   @db.NVarChar(50)
+  orderId          Int      @id(map: "PK__orderRev__0809335DC7D60967")
+  Customer         Users    @relation(fields: [customerId], references: [userName], onUpdate: NoAction, map: "FK__orderRevi__custo__72C60C4A")
+  Orders           Orders   @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction, map: "FK__orderRevi__order__73BA3083")
+}
+
+model Orders {
+  orderId                 Int                       @id(map: "PK__Orders__0809335D8AFAF3D4") @default(autoincrement())
+  location                String                    @db.VarChar(100)
+  orderTime               DateTime
+  itemsPrice              Decimal                   @db.Decimal(10, 2)
+  deliveryFee             Decimal?                  @db.Decimal(10, 2)
+  status                  String                    @db.VarChar(20)
+  customerId              String                    @db.NVarChar(50)
+  restaurantId            Int
+  deliveryChat            deliveryChat[]
+  onDeliverOrders         onDeliverOrders?
+  onPrepareOrders         onPrepareOrders?
+  orderItems              orderItems[]
+  orderReview             orderReview?
+  Customer                Users                     @relation(fields: [customerId], references: [userName], onUpdate: NoAction, map: "FK__Orders__customer__628FA481")
+  Restaurant              Restaurant                @relation(fields: [restaurantId], references: [restaurantId], onUpdate: NoAction, map: "FK__Orders__restaura__6383C8BA")
+  paymentWithCard_Wallet  paymentWithCard_Wallet[]
+  paymentWithCoupons      paymentWithCoupons[]
+  paymentWithSubscription paymentWithSubscription[]
+  restaurantChat          restaurantChat[]
+}
+
+model Payment {
+  paymentId               Int                      @id(map: "PK__Payment__A0D9EFC6BB98AB11") @default(autoincrement())
+  amount                  Decimal                  @db.Decimal(10, 2)
+  paymentStatus           String                   @db.VarChar(20)
+  time                    DateTime
+  customerSubscription    customerSubscription[]
+  paymentWithCard_Wallet  paymentWithCard_Wallet?
+  paymentWithCoupons      paymentWithCoupons?
+  paymentWithSubscription paymentWithSubscription?
+}
+
+model paymentWithCard_Wallet {
+  paymentAmount Float?
+  paymentId     Int           @id(map: "PK__paymentW__A0D9EFC6785A441E")
+  customerId    String        @db.NVarChar(50)
+  number        String        @db.VarChar(20)
+  orderId       Int?
+  Orders        Orders?       @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction, map: "FK__paymentWi__order__3E1D39E1")
+  Payment       Payment       @relation(fields: [paymentId], references: [paymentId], onDelete: Cascade, onUpdate: NoAction, map: "FK__paymentWi__payme__7E37BEF6")
+  Wallets_Cards Wallets_Cards @relation(fields: [number, customerId], references: [number, customerId], onUpdate: NoAction, map: "FK__paymentWithCard___7F2BE32F")
+}
+
+model paymentWithCoupons {
+  paymentAmount Float?
+  paymentId     Int     @id(map: "PK__paymentW__A0D9EFC6A335617C")
+  couponId      Int
+  orderId       Int?
+  Coupons       Coupons @relation(fields: [couponId], references: [couponId], onUpdate: NoAction, map: "FK__paymentWi__coupo__2180FB33")
+  Orders        Orders? @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction, map: "FK__paymentWi__order__42E1EEFE")
+  Payment       Payment @relation(fields: [paymentId], references: [paymentId], onDelete: Cascade, onUpdate: NoAction, map: "FK__paymentWi__payme__08B54D69")
+}
+
+model paymentWithSubscription {
+  paymentAmount        Float?
+  paymentId            Int                  @id(map: "PK__paymentW__A0D9EFC6C5DE0126")
+  customerId           String               @db.NVarChar(50)
+  subscriptionId       String               @db.VarChar(50)
+  restaurantID         Int
+  orderId              Int?
+  Orders               Orders?              @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction, map: "FK__paymentWi__order__47A6A41B")
+  Payment              Payment              @relation(fields: [paymentId], references: [paymentId], onDelete: Cascade, onUpdate: NoAction, map: "FK__paymentWi__payme__14270015")
+  customerSubscription customerSubscription @relation(fields: [customerId, subscriptionId, restaurantID], references: [customerId, subscriptionId, restaurantID], onDelete: Cascade, onUpdate: NoAction, map: "FK__paymentWithSubsc__1DB06A4F")
+}
+
+model proccessedTickets {
+  responseMessage String   @db.VarChar(200)
+  responseTime    DateTime
+  ticketId        Int      @id(map: "PK__proccess__3333C610CCC78F94")
+  supportId       String?  @db.NVarChar(50)
+  supportStaff    Users?   @relation(fields: [supportId], references: [userName], onDelete: NoAction, onUpdate: NoAction, map: "FK__proccesse__suppo__46E78A0C")
+  Tickets         Tickets  @relation(fields: [ticketId], references: [ticketId], onDelete: Cascade, onUpdate: NoAction, map: "FK__proccesse__ticke__45F365D3")
+}
+
+model Restaurant {
+  restaurantId    Int             @id(map: "PK__Restaura__09D80A3025FD8E39") @default(autoincrement())
+  category        String          @db.VarChar(50)
+  photo           String?         @db.VarChar(100)
+  openingHours    String          @db.VarChar(20)
+  restaurantName  String          @unique(map: "UQ__Restaura__61B63621930B082E") @db.NVarChar(50)
+  description     String?         @db.VarChar(200)
+  location        String          @db.VarChar(100)
+  managerID       String          @db.NVarChar(50)
+  Coupons         Coupons[]
+  kitchenStaff    kitchenStaff[]
+  menuItems       menuItems[]
+  Orders          Orders[]
+  restaurantOwner restaurantOwner @relation(fields: [managerID], references: [userName], onDelete: Cascade, onUpdate: NoAction, map: "FK__Restauran__manag__4CA06362")
+  Subscription    Subscription[]
+}
+
+model restaurantChat {
+  messageId Int      @id(map: "PK__restaura__4808B99351ABFB81") @default(autoincrement())
+  message   String   @db.VarChar(100)
+  timeSent  DateTime
+  status    String   @db.VarChar(20)
+  SRFlag    String   @db.Char(1)
+  orderId   Int?
+  Orders    Orders?  @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction, map: "FK__restauran__order__3864608B")
+}
+
+model restaurantOwner {
+  userName   String       @id(map: "PK__restaura__66DCF95D46FBE702") @db.NVarChar(50)
+  bankId     String       @db.VarChar(20)
+  Restaurant Restaurant[]
+  Users      Users        @relation(fields: [userName], references: [userName], onDelete: Cascade, onUpdate: NoAction, map: "FK__restauran__userN__46E78A0C")
+}
+
+model Subscription {
+  planName             String                 @db.VarChar(50)
+  price                Decimal                @db.Decimal(10, 2)
+  restaurantID         Int
+  amount               Decimal                @db.Decimal(10, 2)
+  FreeDelivery         Boolean?
+  period               Int
+  customerSubscription customerSubscription[]
+  Restaurant           Restaurant             @relation(fields: [restaurantID], references: [restaurantId], onUpdate: NoAction, map: "FK__Subscript__resta__0C85DE4D")
+
+  @@id([planName, restaurantID], map: "PK__Subscrip__71258B1466F4D9B3")
+}
+
+model Tickets {
+  ticketId          Int                @id(map: "PK__Tickets__3333C61053409B85") @default(autoincrement())
+  subject           String?            @db.VarChar(50)
+  message           String             @db.VarChar(200)
+  status            String             @db.VarChar(20)
+  createdAt         DateTime?
+  customerId        String             @db.NVarChar(50)
+  proccessedTickets proccessedTickets?
+  Customer          Users              @relation(fields: [customerId], references: [userName], onUpdate: NoAction, map: "FK__Tickets__custome__4316F928")
+}
+
+model Wallets_Cards {
+  number                 String                   @db.VarChar(20)
+  type                   String                   @db.VarChar(10)
+  customerId             String                   @db.NVarChar(50)
+  paymentWithCard_Wallet paymentWithCard_Wallet[]
+  Customer               Users                    @relation(fields: [customerId], references: [userName], onDelete: Cascade, onUpdate: NoAction, map: "FK__Wallets_C__custo__3D5E1FD2")
+
+  @@id([number, customerId], map: "PK__Wallets___364802F7ECD97198")
+}
+
+model Users {
+  userName             String                 @id(map: "PK__Users__66DCF95D940ECD0D") @db.NVarChar(50)
+  name                 String                 @db.NVarChar(50)
+  password             String                 @db.NVarChar(100)
+  photo                String?                @db.NVarChar(100)
+  email                String                 @db.NVarChar(100)
+  phoneNumber          String                 @db.NVarChar(15)
+  type                 String                 @db.Char(1)
+  passwordChangedAt    DateTime?
+  customerAddress      customerAddress[]
+  customerSubscription customerSubscription[]
+  deliveryPerson       deliveryPerson?
+  kitchenStaff         kitchenStaff?
+  orderReview          orderReview[]
+  Orders               Orders[]
+  proccessedTickets    proccessedTickets[]
+  restaurantOwner      restaurantOwner?
+  Tickets              Tickets[]
+  Wallets_Cards        Wallets_Cards[]
+}
