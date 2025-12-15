@@ -138,37 +138,6 @@ const upload = multer({
 exports.uploadPhoto = upload.single('photo');
 exports.uploadOwner = upload.fields([{ name: 'photo' }, { name: 'restPhoto' }]);
 
-// const UserPhoto = async (req) => {
-//   if (!req.file) return;
-//   req.file.filename = `${req.body.userName}.jpeg`;
-
-//   await sharp(req.file.buffer)
-//     .resize(500, 500)
-//     .toFormat('jpeg')
-//     .jpeg({ quality: 90 })
-//     .toFile(`images/users/${req.file.filename}`);
-// };
-
-// const ownerPhotos = async (req) => {
-//   if (!req.files) return;
-//   if (req.files.photo) {
-//     req.files.photo[0].filename = `${req.body.userName}.jpeg`;
-//     await sharp(req.files.photo[0].buffer)
-//       .resize(500, 500)
-//       .toFormat('jpeg')
-//       .jpeg({ quality: 90 })
-//       .toFile(`images/users/${req.files.photo[0].filename}`);
-//   }
-//   if (req.files.restPhoto) {
-//     req.files.restPhoto[0].filename = `${req.body.restaurantName}.jpeg`;
-//     await sharp(req.files.restPhoto[0].buffer)
-//       .resize(500, 500)
-//       .toFormat('jpeg')
-//       .jpeg({ quality: 90 })
-//       .toFile(`images/restaurants/${req.files.restPhoto[0].filename}`);
-//   }
-// };
-
 exports.customerSignup = async (req, res, next) => {
   try {
     if (!req.body.methodNumber)
@@ -416,9 +385,10 @@ exports.changePassword = async (req, res, next) => {
 };
 
 exports.logout = async (req, res, next) => {
-  res.cookie('jwt', 'logged out', {
+  res.clearCookie('jwt', {
     httpOnly: true,
-    expiresIn: new Date(Date.now() + 10 * 1000),
+    secure: true,
+    sameSite: 'none',
   });
   res.status(200).json({
     status: 'success',
