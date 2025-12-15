@@ -4,7 +4,7 @@ const customerController = require('../controllers/customerControllers');
 
 const router = express.Router();
 
-router.get(
+router.post(
   '/getRestaurants',
   authController.protect,
   authController.restrictToCustomer,
