@@ -55,7 +55,7 @@ router.post(
 );
 
 router.delete(
-  '/deleteSubscription',
+  '/deleteSubscription:name',
   authController.protect,
   authController.restrictToOwner,
   managerController.deleteSubscription
