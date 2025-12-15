@@ -224,7 +224,7 @@ exports.createSubscription = async (req, res) => {
 
 exports.deleteSubscription = async (req, res) => {
   try {
-    if (!req.body.name) throw new Error('select a plan');
+    if (!req.params.name) throw new Error('select a plan');
     const restaurantId = await getRestId(req);
 
     const deleted = await prisma.Subscription.delete({
