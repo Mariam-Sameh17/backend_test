@@ -112,6 +112,38 @@ exports.getRestaurantbyName = async (req, res) => {
   }
 };
 
+exports.searchRestaurant = async (req, res) => {
+  try {
+    if (!req.body.name) throw new Error('type a letter');
+
+    const Restaurants = await prisma.Restaurant.findMany({
+      where: {
+        restaurantName: {
+          contains: req.body.name,
+        },
+      },
+      select: {
+        category: true,
+        openingHours: true,
+        restaurantName: true,
+        description: true,
+        location: true,
+      },
+    });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        Restaurants,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
 exports.paymentPage = async (req, res) => {
   const coupons = await prisma.coupons.findMany({
     where: {

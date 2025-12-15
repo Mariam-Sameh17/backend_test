@@ -19,6 +19,13 @@ router.get(
 );
 
 router.get(
+  '/searchRestaurant',
+  authController.protect,
+  authController.restrictToCustomer,
+  customerController.searchRestaurant
+);
+
+router.get(
   '/getRestaurantbyCategory',
   authController.protect,
   authController.restrictToCustomer,
