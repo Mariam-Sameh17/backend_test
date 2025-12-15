@@ -47,11 +47,11 @@ exports.getAllItems = async (req, res) => {
 
 exports.getRestaurantbyCategory = async (req, res) => {
   try {
-    if (!req.params.category) throw new Error('select a category');
+    if (!req.query.category) throw new Error('select a category');
 
     const Restaurants = await prisma.Restaurant.findMany({
       where: {
-        category: req.params.category,
+        category: req.query.category,
       },
       select: {
         category: true,
@@ -77,11 +77,11 @@ exports.getRestaurantbyCategory = async (req, res) => {
 
 exports.getRestaurantbyName = async (req, res) => {
   try {
-    if (!req.params.name) throw new Error('select a name');
+    if (!req.query.name) throw new Error('select a name');
 
     const Restaurant = await prisma.Restaurant.findFirst({
       where: {
-        restaurantName: req.params.name,
+        restaurantName: req.query.name,
       },
       select: {
         category: true,
@@ -114,12 +114,12 @@ exports.getRestaurantbyName = async (req, res) => {
 
 exports.searchRestaurant = async (req, res) => {
   try {
-    if (!req.params.name) throw new Error('type a letter');
+    if (!req.query.name) throw new Error('type a letter');
 
     const Restaurants = await prisma.Restaurant.findMany({
       where: {
         restaurantName: {
-          contains: req.params.name,
+          contains: req.query.name,
         },
       },
       select: {
@@ -147,7 +147,7 @@ exports.searchRestaurant = async (req, res) => {
 exports.paymentPage = async (req, res) => {
   const coupons = await prisma.coupons.findMany({
     where: {
-      restaurantID: req.params.restId,
+      restaurantID: req.query.restId,
       available_uses: { gt: 0 },
     },
   });
@@ -165,7 +165,7 @@ exports.paymentPage = async (req, res) => {
 
   let subscription = await prisma.subscription.findFirst({
     where: {
-      restaurantID: req.params.restId,
+      restaurantID: req.query.restId,
       customerSubscription: {
         some: { customerId: req.user.userName },
       },
