@@ -19,8 +19,13 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
-app.use(cors());
-app.options('*', cors());
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  credentials: true,
+};
+
+// Apply it
+app.use(cors(corsOptions));
 
 app.use(express.static(`${__dirname}/images`));
 
