@@ -427,7 +427,7 @@ exports.logout = async (req, res, next) => {
 
 exports.profile = async (req, res) => {
   let user;
-  if (req.user.type === 'c' || req.user.type === 's')
+  if (req.user.type === 'c' || req.user.type === 's' || req.user.type === 'k')
     user = await prisma.users.findFirst({
       where: {
         userName: req.user.userName,
@@ -439,13 +439,6 @@ exports.profile = async (req, res) => {
         userName: req.user.userName,
       },
       include: { restaurantOwner: { include: { Restaurant: true } } },
-    });
-  } else if (req.user.type === 'k') {
-    user = await prisma.users.findFirst({
-      where: {
-        userName: req.user.userName,
-      },
-      include: { kitchenStaff: true },
     });
   } else if (req.user.type === 'd') {
     user = await prisma.users.findFirst({

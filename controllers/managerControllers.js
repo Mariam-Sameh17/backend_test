@@ -151,13 +151,10 @@ exports.addKitchenStaff = async (req, res) => {
           },
         },
       },
-      include: {
-        kitchenStaff: true,
-      },
     });
     res.status(201).json({
       status: 'success',
-      kitchenStaff,
+      data: { ...kitchenStaff },
     });
   } catch (err) {
     let message;
@@ -181,13 +178,10 @@ exports.getStaff = async (req, res) => {
         restaurantId,
       },
     },
-    include: {
-      kitchenStaff: true,
-    },
   });
-  res.status(201).json({
+  res.status(200).json({
     status: 'success',
-    kitStaff,
+    data: { kitStaff },
   });
 };
 
