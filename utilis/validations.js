@@ -121,7 +121,6 @@ exports.validateRestaurant = (req) => {
     restaurantName: req.body.restaurantName,
     description: req.body.description ? req.body.description : null,
     location: req.body.location,
-    balance: 0,
   };
   return data;
 };
