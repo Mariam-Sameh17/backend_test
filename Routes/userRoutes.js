@@ -34,6 +34,10 @@ router.patch(
 
 router.post('/sendMessage', authController.protect, userController.sendMessage);
 
-router.get('/getMessages', authController.protect, userController.getMessages);
+router.get(
+  '/getMessages/:orderId',
+  authController.protect,
+  userController.getMessages
+);
 
 module.exports = router;
