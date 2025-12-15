@@ -77,11 +77,12 @@ exports.getRestaurantbyCategory = async (req, res) => {
 
 exports.getRestaurantbyName = async (req, res) => {
   try {
-    if (!req.query.name) throw new Error('select a name');
+    console.log(req.params);
+    if (!req.params.name) throw new Error('select a name');
 
     const Restaurant = await prisma.Restaurant.findFirst({
       where: {
-        restaurantName: req.query.name,
+        restaurantName: req.params.name,
       },
       select: {
         category: true,
@@ -145,9 +146,10 @@ exports.searchRestaurant = async (req, res) => {
 };
 
 exports.paymentPage = async (req, res) => {
+  const restaurantID = parseInt(req.params.restId);
   const coupons = await prisma.coupons.findMany({
     where: {
-      restaurantID: req.query.restId,
+      restaurantID,
       available_uses: { gt: 0 },
     },
   });
@@ -165,7 +167,7 @@ exports.paymentPage = async (req, res) => {
 
   let subscription = await prisma.subscription.findFirst({
     where: {
-      restaurantID: req.query.restId,
+      restaurantID,
       customerSubscription: {
         some: { customerId: req.user.userName },
       },
@@ -462,7 +464,7 @@ exports.getOrderDetails = async (req, res) => {
   try {
     const order = await prisma.orderItems.findMany({
       where: {
-        orderId: req.body.orderId,
+        orderId: parseInt(req.params.orderId),
       },
 
       select: {

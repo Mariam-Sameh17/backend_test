@@ -33,14 +33,14 @@ router.get(
 );
 
 router.get(
-  '/getRestaurantbyName',
+  '/getRestaurantbyName/:name',
   authController.protect,
   authController.restrictToCustomer,
   customerController.getRestaurantbyName
 );
 
 router.get(
-  '/paymentPage',
+  '/paymentPage/:restId',
   authController.protect,
   authController.restrictToCustomer,
   customerController.paymentPage
@@ -54,7 +54,7 @@ router.get(
 );
 
 router.get(
-  '/getOrderDetail',
+  '/getOrderDetail/:orderId',
   authController.protect,
   authController.restrictToCustomer,
   customerController.getOrderDetails
