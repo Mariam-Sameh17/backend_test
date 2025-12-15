@@ -172,6 +172,25 @@ exports.addKitchenStaff = async (req, res) => {
   }
 };
 
+exports.getStaff = async (req, res) => {
+  const restaurantId = await getRestId(req);
+
+  const kitStaff = await prisma.users.findMany({
+    where: {
+      kitchenStaff: {
+        restaurantId,
+      },
+    },
+    include: {
+      kitchenStaff: true,
+    },
+  });
+  res.status(201).json({
+    status: 'success',
+    kitStaff,
+  });
+};
+
 exports.createSubscription = async (req, res) => {
   try {
     const restaurantID = await getRestId(req);

@@ -40,6 +40,13 @@ router.get(
   managerController.getOrders
 );
 
+router.get(
+  '/getStaff',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.getStaff
+);
+
 router.post(
   '/addKitchenStaff',
   authController.protect,
