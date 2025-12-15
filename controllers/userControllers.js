@@ -72,9 +72,10 @@ exports.sendMessage = async (req, res, next) => {
 };
 
 exports.getMessages = async (req, res) => {
+  const orderId = parseInt(req.params.orderId);
   const { status } = await prisma.orders.findFirst({
     where: {
-      orderId: req.params.orderId,
+      orderId,
     },
     select: {
       status: true,
@@ -87,7 +88,7 @@ exports.getMessages = async (req, res) => {
   ) {
     await prisma.deliveryChat.updateMany({
       where: {
-        orderId: req.params.orderId,
+        orderId,
         SRFlag: req.user.type == 'c' ? 'd' : 'c',
       },
       data: {
@@ -96,7 +97,7 @@ exports.getMessages = async (req, res) => {
     });
     messages = await prisma.deliveryChat.findMany({
       where: {
-        orderId: req.params.orderId,
+        orderId,
       },
     });
     console.log(messages);
@@ -110,7 +111,7 @@ exports.getMessages = async (req, res) => {
   } else {
     await prisma.restaurantChat.updateMany({
       where: {
-        orderId: req.params.orderId,
+        orderId,
         SRFlag: req.user.type == 'c' ? { in: ['m', 'k'] } : 'c',
       },
       data: {
@@ -119,7 +120,7 @@ exports.getMessages = async (req, res) => {
     });
     messages = await prisma.restaurantChat.findMany({
       where: {
-        orderId: req.params.orderId,
+        orderId,
       },
     });
     let types;
