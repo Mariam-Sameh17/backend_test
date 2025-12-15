@@ -15,8 +15,19 @@ exports.getOrders = async (req, res, next) => {
   const restaurantId = await getRestId(req);
   const orders = await prisma.orders.findMany({
     where: {
-      restaurantId,
-      status: 'received',
+      restaurantId: restaurantId,
+      OR: [
+        {
+          status: 'pending',
+        },
+
+        {
+          status: { in: ['preparing', 'ready'] },
+          onPrepareOrders: {
+            kitchenStaffId: req.user.userName,
+          },
+        },
+      ],
     },
   });
   res.status(200).json({
@@ -36,7 +47,7 @@ exports.prepare = async (req, res, next) => {
         orderId: req.body.orderId,
       },
       data: {
-        status: 'being prepared',
+        status: 'preparing',
         onPrepareOrders: {
           create: {
             preparingTime: req.body.preparingTime,
@@ -66,7 +77,7 @@ exports.finishOrder = async (req, res, next) => {
         orderId: req.body.orderId,
       },
       data: {
-        status: 'done',
+        status: 'ready',
       },
     });
     res.status(200).json({

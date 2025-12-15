@@ -1,29 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const validations = require('../utilis/validations');
-const sharp = require('sharp');
-
-const itemPhoto = async (req) => {
-  if (!req.file) return;
-  req.file.filename = `${req.body.name}.jpeg`;
-
-  await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat('jpeg')
-    .jpeg({ quality: 90 })
-    .toFile(`images/items/${req.file.filename}`);
-};
-
-const staffPhoto = async (req) => {
-  if (!req.file) return;
-  req.file.filename = `${req.body.userName}.jpeg`;
-
-  await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat('jpeg')
-    .jpeg({ quality: 90 })
-    .toFile(`images/users/${req.file.filename}`);
-};
 
 const getRestId = async (req) => {
   const { restaurantId } = await prisma.Restaurant.findFirst({
@@ -44,12 +21,11 @@ exports.addItems = async (req, res) => {
     const item = await prisma.menuItems.create({
       data: {
         ...itemData,
-        photo: req.file ? `images/items/${req.body.name}` : null,
+        photo: req.body.photo || null,
         finalPrice: itemData.price,
         restaurantId,
       },
     });
-    itemPhoto(req);
     res.status(201).json({
       status: 'success',
       item,
@@ -168,7 +144,7 @@ exports.addKitchenStaff = async (req, res) => {
       data: {
         ...staffData,
         type: 'k',
-        photo: req.file ? `images/users/${req.body.userName}` : null,
+        photo: req.body.photo || null,
         kitchenStaff: {
           create: {
             restaurantId,
@@ -179,7 +155,6 @@ exports.addKitchenStaff = async (req, res) => {
         kitchenStaff: true,
       },
     });
-    staffPhoto(req);
     res.status(201).json({
       status: 'success',
       kitchenStaff,

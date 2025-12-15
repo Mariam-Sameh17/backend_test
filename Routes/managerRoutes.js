@@ -8,6 +8,7 @@ router.post(
   authController.protect,
   authController.restrictToOwner,
   authController.uploadPhoto,
+  authController.Photo,
   managerController.addItems
 );
 
@@ -44,6 +45,7 @@ router.post(
   authController.protect,
   authController.restrictToOwner,
   authController.uploadPhoto,
+  authController.Photo,
   managerController.addKitchenStaff
 );
 

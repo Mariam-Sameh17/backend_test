@@ -8,6 +8,75 @@ const validations = require('../utilis/validations');
 const multer = require('multer');
 const sharp = require('sharp');
 
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const uploadFromBuffer = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'YumRush' }, // Optional: organize in folders
+      (error, result) => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject(error);
+        }
+      }
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+};
+
+exports.Photo = async (req, res, next) => {
+  if (!req.file) return next();
+
+  const processedBuffer = await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toBuffer();
+
+  const result = await uploadFromBuffer(processedBuffer);
+
+  req.body.photo = result.secure_url;
+  next();
+};
+
+exports.ownerPhotos = async (req, res, next) => {
+  if (!req.files) return next();
+
+  if (req.files.photo) {
+    const userBuffer = await sharp(req.files.photo[0].buffer)
+      .resize(500, 500)
+      .toFormat('jpeg')
+      .jpeg({ quality: 90 })
+      .toBuffer();
+
+    const userResult = await uploadFromBuffer(userBuffer);
+
+    req.body.photo = userResult.secure_url;
+  }
+
+  if (req.files.restPhoto) {
+    const restBuffer = await sharp(req.files.restPhoto[0].buffer)
+      .resize(500, 500)
+      .toFormat('jpeg')
+      .jpeg({ quality: 90 })
+      .toBuffer();
+
+    const restResult = await uploadFromBuffer(restBuffer);
+
+    req.body.restPhoto = restResult.secure_url;
+  }
+  next();
+};
+
 const errorMessage = (err) => {
   if (err.code === 'P2002') {
     if (err.meta.target == 'dbo.Restaurant')
@@ -69,36 +138,36 @@ const upload = multer({
 exports.uploadPhoto = upload.single('photo');
 exports.uploadOwner = upload.fields([{ name: 'photo' }, { name: 'restPhoto' }]);
 
-const UserPhoto = async (req) => {
-  if (!req.file) return;
-  req.file.filename = `${req.body.userName}.jpeg`;
+// const UserPhoto = async (req) => {
+//   if (!req.file) return;
+//   req.file.filename = `${req.body.userName}.jpeg`;
 
-  await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat('jpeg')
-    .jpeg({ quality: 90 })
-    .toFile(`images/users/${req.file.filename}`);
-};
+//   await sharp(req.file.buffer)
+//     .resize(500, 500)
+//     .toFormat('jpeg')
+//     .jpeg({ quality: 90 })
+//     .toFile(`images/users/${req.file.filename}`);
+// };
 
-const ownerPhotos = async (req) => {
-  if (!req.files) return;
-  if (req.files.photo) {
-    req.files.photo[0].filename = `${req.body.userName}.jpeg`;
-    await sharp(req.files.photo[0].buffer)
-      .resize(500, 500)
-      .toFormat('jpeg')
-      .jpeg({ quality: 90 })
-      .toFile(`images/users/${req.files.photo[0].filename}`);
-  }
-  if (req.files.restPhoto) {
-    req.files.restPhoto[0].filename = `${req.body.restaurantName}.jpeg`;
-    await sharp(req.files.restPhoto[0].buffer)
-      .resize(500, 500)
-      .toFormat('jpeg')
-      .jpeg({ quality: 90 })
-      .toFile(`images/restaurants/${req.files.restPhoto[0].filename}`);
-  }
-};
+// const ownerPhotos = async (req) => {
+//   if (!req.files) return;
+//   if (req.files.photo) {
+//     req.files.photo[0].filename = `${req.body.userName}.jpeg`;
+//     await sharp(req.files.photo[0].buffer)
+//       .resize(500, 500)
+//       .toFormat('jpeg')
+//       .jpeg({ quality: 90 })
+//       .toFile(`images/users/${req.files.photo[0].filename}`);
+//   }
+//   if (req.files.restPhoto) {
+//     req.files.restPhoto[0].filename = `${req.body.restaurantName}.jpeg`;
+//     await sharp(req.files.restPhoto[0].buffer)
+//       .resize(500, 500)
+//       .toFormat('jpeg')
+//       .jpeg({ quality: 90 })
+//       .toFile(`images/restaurants/${req.files.restPhoto[0].filename}`);
+//   }
+// };
 
 exports.customerSignup = async (req, res, next) => {
   try {
@@ -110,7 +179,7 @@ exports.customerSignup = async (req, res, next) => {
       data: {
         ...userData,
         type: 'c',
-        photo: req.file ? `images/users/${req.body.userName}` : null,
+        photo: req.body.photo || null,
         Wallets_Cards: {
           create: {
             number: req.body.methodNumber,
@@ -119,7 +188,6 @@ exports.customerSignup = async (req, res, next) => {
         },
       },
     });
-    await UserPhoto(req);
 
     finalResponse(newCustomer, res, 201);
   } catch (err) {
@@ -137,7 +205,7 @@ exports.deliverySignup = async (req, res, next) => {
     const newDelivery = await prisma.Users.create({
       data: {
         ...userData,
-        photo: req.file ? `images/users/${req.body.userName}` : null,
+        photo: req.body.photo || null,
         type: 'd',
         deliveryPerson: {
           create: {
@@ -149,7 +217,6 @@ exports.deliverySignup = async (req, res, next) => {
         deliveryPerson: true,
       },
     });
-    await UserPhoto(req);
 
     finalResponse(newDelivery, res, 201);
   } catch (err) {
@@ -169,16 +236,14 @@ exports.managerSignup = async (req, res, next) => {
       data: {
         ...userData,
         type: 'm',
-        photo: req.files.photo ? `images/users/${req.body.userName}` : null,
+        photo: req.body.photo || null,
         restaurantOwner: {
           create: {
             bankId: req.body.bankId ? req.body.bankId : null,
             Restaurant: {
               create: {
                 ...restaurantData,
-                photo: req.files.restPhoto
-                  ? `images/restaurants/${req.body.restaurantName}`
-                  : null,
+                photo: req.body.restPhoto || null,
               },
             },
           },
@@ -188,7 +253,7 @@ exports.managerSignup = async (req, res, next) => {
         restaurantOwner: { include: { Restaurant: true } },
       },
     });
-    await ownerPhotos(req);
+
     finalResponse(newManager, res, 201);
   } catch (err) {
     res.status(400).json({

@@ -272,7 +272,7 @@ exports.placeOrder = async (req, res) => {
             location: req.body.location,
             orderTime: new Date(),
             deliveryFee,
-            status: 'received',
+            status: 'pending',
             customerId: req.user.userName,
             restaurantId: req.body.restId,
             itemsPrice: total - deliveryFee,

@@ -7,12 +7,14 @@ const router = express.Router();
 router.post(
   '/customerSignup',
   authController.uploadPhoto,
+  authController.Photo,
   authController.customerSignup
 );
 
 router.post(
   '/managerSignup',
   authController.uploadOwner,
+  authController.ownerPhotos,
   authController.managerSignup
 );
 

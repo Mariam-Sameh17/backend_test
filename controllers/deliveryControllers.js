@@ -4,10 +4,18 @@ const prisma = new PrismaClient();
 exports.getOrders = async (req, res, next) => {
   const orders = await prisma.orders.findMany({
     where: {
-      status: { in: ['done', 'on delivery', 'deliverd'] },
-      onDeliverOrders: {
-        deliveryId: req.user.userName,
-      },
+      OR: [
+        {
+          status: 'done',
+        },
+
+        {
+          status: { in: ['on-delivery', 'delivered'] },
+          onPrepareOrders: {
+            kitchenStaffId: req.user.userName,
+          },
+        },
+      ],
     },
     include: {
       onDeliverOrders: {
@@ -32,7 +40,7 @@ exports.deliver = async (req, res, next) => {
         orderId: req.body.orderId,
       },
       data: {
-        status: 'on delivery',
+        status: 'on-delivery',
         onDeliverOrders: {
           create: {
             deliveryTime: req.body.deliveryTime,
@@ -62,7 +70,7 @@ exports.leaveOrder = async (req, res, next) => {
         orderId: req.body.orderId,
       },
       data: {
-        status: 'deliverd',
+        status: 'delivered',
       },
     });
     res.status(200).json({
