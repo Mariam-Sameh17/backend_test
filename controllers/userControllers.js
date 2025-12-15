@@ -100,7 +100,6 @@ exports.getMessages = async (req, res) => {
         orderId,
       },
     });
-    console.log(messages);
     for (const m of messages) {
       if (m.SRFlag === req.user.type) {
         m.flag = 'sent';
@@ -126,7 +125,6 @@ exports.getMessages = async (req, res) => {
     let types;
     if (req.user.type == 'k' || req.user.type == 'm') types = ['k', 'm'];
     else types = ['c'];
-    console.log(req.user.type, types);
     for (const m of messages) {
       if (types.includes(m.SRFlag)) {
         m.flag = 'sent';

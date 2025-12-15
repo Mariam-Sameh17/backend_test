@@ -20,7 +20,7 @@ cloudinary.config({
 const uploadFromBuffer = (buffer) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: 'YumRush' }, // Optional: organize in folders
+      { folder: 'YumRush' },
       (error, result) => {
         if (result) {
           resolve(result);
@@ -229,7 +229,6 @@ exports.deliverySignup = async (req, res, next) => {
 
 exports.managerSignup = async (req, res, next) => {
   try {
-    console.log(req.files);
     const userData = await validations.validateUser(req);
     const restaurantData = validations.validateRestaurant(req);
     const newManager = await prisma.Users.create({
@@ -423,5 +422,43 @@ exports.logout = async (req, res, next) => {
   });
   res.status(200).json({
     status: 'success',
+  });
+};
+
+exports.profile = async (req, res) => {
+  let user;
+  if (req.user.type === 'c' || req.user.type === 's')
+    user = await prisma.users.findFirst({
+      where: {
+        userName: req.user.userName,
+      },
+    });
+  else if (req.user.type === 'm') {
+    user = await prisma.users.findFirst({
+      where: {
+        userName: req.user.userName,
+      },
+      include: { restaurantOwner: { include: { Restaurant: true } } },
+    });
+  } else if (req.user.type === 'k') {
+    user = await prisma.users.findFirst({
+      where: {
+        userName: req.user.userName,
+      },
+      include: { kitchenStaff: true },
+    });
+  } else if (req.user.type === 'd') {
+    user = await prisma.users.findFirst({
+      where: {
+        userName: req.user.userName,
+      },
+      include: { deliveryPerson: true },
+    });
+  }
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user,
+    },
   });
 };

@@ -113,7 +113,6 @@ exports.getRestaurantbyCategory = async (req, res) => {
 
 exports.getRestaurantbyName = async (req, res) => {
   try {
-    console.log(req.params);
     if (!req.params.name) throw new Error('select a name');
 
     const Restaurant = await prisma.Restaurant.findFirst({

@@ -42,4 +42,6 @@ router.get(
   userController.getMessages
 );
 
+router.get('/profile', authController.protect, authController.profile);
+
 module.exports = router;
