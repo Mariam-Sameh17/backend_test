@@ -10,7 +10,6 @@ exports.getAllRestaurants = async (req, res) => {
         restaurantName: true,
         description: true,
         location: true,
-        menuItems: true,
       },
     });
     res.status(200).json({
