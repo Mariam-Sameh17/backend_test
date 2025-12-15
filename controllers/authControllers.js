@@ -455,6 +455,8 @@ exports.profile = async (req, res) => {
       include: { deliveryPerson: true },
     });
   }
+  user.password = undefined;
+  user.passwordChangedAt = undefined;
   res.status(200).json({
     status: 'success',
     data: {
