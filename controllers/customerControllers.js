@@ -13,7 +13,7 @@ exports.getAllRestaurants = async (req, res) => {
         description: true,
         location: true,
         restaurantId: true,
-        Photo: true,
+        photo: true,
       },
     });
     for (r of Restaurants) {
@@ -79,7 +79,7 @@ exports.getRestaurantbyCategory = async (req, res) => {
         description: true,
         location: true,
         restaurantId: true,
-        Photo: true,
+        photo: true,
       },
     });
     for (r of Restaurants) {
@@ -123,7 +123,7 @@ exports.getRestaurantbyName = async (req, res) => {
         restaurantName: true,
         description: true,
         location: true,
-        Photo: true,
+        photo: true,
         menuItems: true,
       },
     });
@@ -157,7 +157,7 @@ exports.searchRestaurant = async (req, res) => {
         restaurantName: true,
         description: true,
         location: true,
-        Photo: true,
+        photo: true,
       },
     });
     for (r of Restaurants) {
@@ -318,16 +318,6 @@ exports.placeOrder = async (req, res) => {
             orderId: order.orderId,
           },
         });
-        // await prisma.restaurant.update({
-        //   where: {
-        //     restaurantId: req.body.restId,
-        //   },
-        //   data: {
-        //     balance: {
-        //       increment: req.body.walletPayment,
-        //     },
-        //   },
-        // });
 
         for (const i of req.body.items) {
           await prisma.orderItems.create({
