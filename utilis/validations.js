@@ -34,13 +34,12 @@ exports.validateItems = (req) => {
   if (!req.body.price || isNaN(parseFloat(req.body.price)))
     throw new Error('You should enter the price of the item as a number');
 
-  if (!req.body.availableAmount || isNaN(parseInt(req.body.availableAmount)))
-    throw new Error('You should enter the amount of the item as a number');
+  if (!req.body.available) throw new Error('You should enter the availability');
   const data = {
     name: req.body.name,
     menuCategory: req.body.menuCategory,
     price: parseFloat(req.body.price),
-    availableAmount: parseInt(req.body.availableAmount),
+    available: req.body.available === 'true' ? true : false,
     description: req.body.description ? req.body.description : null,
     discount: req.body.discount ? req.body.discount : null,
   };

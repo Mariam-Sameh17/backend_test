@@ -12,11 +12,20 @@ router.post(
   managerController.addItems
 );
 
-router.post(
-  '/setItemDiscount',
+router.patch(
+  '/editItem',
   authController.protect,
   authController.restrictToOwner,
-  managerController.setItemDiscount
+  authController.uploadPhoto,
+  authController.Photo,
+  managerController.editItem
+);
+
+router.patch(
+  '/setAvailability',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.setAvailability
 );
 
 router.get(
@@ -68,6 +77,13 @@ router.delete(
   authController.protect,
   authController.restrictToOwner,
   managerController.deleteSubscription
+);
+
+router.delete(
+  '/deleteStaff/:userName',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.deleteStaff
 );
 
 router.post(

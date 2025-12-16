@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { connect } = require('mssql');
+const { Photo } = require('./authControllers');
 const prisma = new PrismaClient();
 
 exports.getAllRestaurants = async (req, res) => {
@@ -12,6 +13,7 @@ exports.getAllRestaurants = async (req, res) => {
         description: true,
         location: true,
         restaurantId: true,
+        Photo: true,
       },
     });
     for (r of Restaurants) {
@@ -82,6 +84,7 @@ exports.getRestaurantbyCategory = async (req, res) => {
         description: true,
         location: true,
         restaurantId: true,
+        Photo: true,
       },
     });
     for (r of Restaurants) {
@@ -125,6 +128,7 @@ exports.getRestaurantbyName = async (req, res) => {
         restaurantName: true,
         description: true,
         location: true,
+        Photo: true,
         menuItems: {
           where: {
             availableAmount: {
@@ -164,8 +168,20 @@ exports.searchRestaurant = async (req, res) => {
         restaurantName: true,
         description: true,
         location: true,
+        Photo: true,
       },
     });
+    for (r of Restaurants) {
+      const x = await prisma.orderReview.aggregate({
+        _avg: { restaurantRating: true },
+        where: {
+          Orders: {
+            restaurantId: r.restaurantId,
+          },
+        },
+      });
+      r.rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
+    }
     res.status(200).json({
       status: 'success',
       data: {

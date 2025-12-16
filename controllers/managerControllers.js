@@ -43,7 +43,7 @@ exports.addItems = async (req, res) => {
   }
 };
 
-exports.setItemDiscount = async (req, res) => {
+exports.editItem = async (req, res) => {
   try {
     if (!req.body.name)
       return res.status(400).json({
@@ -51,24 +51,14 @@ exports.setItemDiscount = async (req, res) => {
         message: 'You should select an item ',
       });
 
-    if (!req.body.discount || isNaN(req.body.discount))
-      return res.status(400).json({
-        status: 'fail',
-        message:
-          'You should enter the discount percentage and make sure it is a number',
-      });
-
     const restaurantId = await getRestId(req);
 
-    const { price } = await prisma.menuItems.findUnique({
+    const itemData = await prisma.menuItems.findUnique({
       where: {
         name_restaurantId: {
           name: req.body.name,
           restaurantId,
         },
-      },
-      select: {
-        price: true,
       },
     });
 
@@ -77,8 +67,49 @@ exports.setItemDiscount = async (req, res) => {
         name_restaurantId: { name: req.body.name, restaurantId },
       },
       data: {
-        discount: req.body.discount,
-        finalPrice: price - (req.body.discount / 100) * price,
+        name: req.body.name || itemData.name,
+        discount: req.body.discount || itemData.discount,
+        finalPrice: req.body.discount
+          ? itemData.price - (req.body.discount / 100) * itemData.price
+          : itemData.finalPrice,
+        menuCategory: req.body.menuCategory || itemData.menuCategory,
+        price: req.body.price || itemData.price,
+        description: req.body.description || itemData.description,
+        photo: req.body.photo || itemData.photo,
+      },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      item,
+    });
+  } catch (err) {
+    if (err.code === 'P2002') {
+      err.message = 'There is already a menu item have this name';
+    }
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.setAvailability = async (req, res) => {
+  try {
+    if (!req.body.name) throw new Error('You should select an item ');
+    if (req.body.available == null)
+      throw new Error('You should enter availability ');
+    let x;
+    // if(req.body.availabile==='true') x=true
+    // else x=false
+    const restaurantId = await getRestId(req);
+    console.log(req.body);
+    const item = await prisma.menuItems.update({
+      where: {
+        name_restaurantId: { name: req.body.name, restaurantId },
+      },
+      data: {
+        available: req.body.available,
       },
     });
 
@@ -185,7 +216,25 @@ exports.getStaff = async (req, res) => {
   });
 };
 
-//export
+exports.deleteStaff = async (req, res) => {
+  try {
+    if (!req.params.userName) throw new Error('select a name');
+    const deleted = await prisma.users.delete({
+      where: {
+        userName: req.params.userName,
+      },
+    });
+    if (deleted)
+      res.status(200).json({
+        status: 'success',
+      });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
 
 exports.createSubscription = async (req, res) => {
   try {
