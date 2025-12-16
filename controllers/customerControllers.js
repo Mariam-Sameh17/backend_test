@@ -45,11 +45,6 @@ exports.getAllRestaurants = async (req, res) => {
 
 exports.getAllItems = async (req, res) => {
   const items = await prisma.menuItems.findMany({
-    where: {
-      availableAmount: {
-        gt: 0,
-      },
-    },
     orderBy: {
       discount: 'desc',
     },
@@ -129,13 +124,7 @@ exports.getRestaurantbyName = async (req, res) => {
         description: true,
         location: true,
         Photo: true,
-        menuItems: {
-          where: {
-            availableAmount: {
-              gt: 0,
-            },
-          },
-        },
+        menuItems: true,
       },
     });
     res.status(200).json({
@@ -347,19 +336,6 @@ exports.placeOrder = async (req, res) => {
               orderId: order.orderId,
               itemName: i.name,
               restaurantId: req.body.restId,
-            },
-          });
-          await prisma.menuItems.update({
-            where: {
-              name_restaurantId: {
-                name: i.name,
-                restaurantId: req.body.restId,
-              },
-            },
-            data: {
-              availableAmount: {
-                decrement: i.quantity,
-              },
             },
           });
         }
