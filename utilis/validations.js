@@ -56,14 +56,11 @@ exports.validateSub = (req) => {
   if (!req.body.amount || isNaN(parseFloat(req.body.amount)))
     throw new Error('You should enter the discount as a number');
 
-  let x;
-  if (req.body.FreeDlivery) x = true;
-  else x = false;
   const data = {
     planName: req.body.planName,
     price: parseFloat(req.body.price),
     amount: parseFloat(req.body.amount),
-    FreeDelivery: x,
+    FreeDelivery: req.body.FreeDelivery,
     period: 30,
   };
   return data;

@@ -21,6 +21,13 @@ router.patch(
   managerController.editItem
 );
 
+router.delete(
+  '/deleteItem/:name',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.deleteItem
+);
+
 router.patch(
   '/setAvailability',
   authController.protect,
@@ -77,6 +84,20 @@ router.delete(
   authController.protect,
   authController.restrictToOwner,
   managerController.deleteSubscription
+);
+
+router.patch(
+  '/editSubscription',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.editSubscription
+);
+
+router.get(
+  '/getSub',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.getSubscriptions
 );
 
 router.delete(

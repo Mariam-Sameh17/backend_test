@@ -42,6 +42,12 @@ router.get(
   userController.getMessages
 );
 
-router.get('/profile', authController.protect, authController.profile);
+router.get('/profile', authController.protect, userController.profile);
+
+router.patch(
+  '/editProfile',
+  authController.protect,
+  userController.updateProfile
+);
 
 module.exports = router;

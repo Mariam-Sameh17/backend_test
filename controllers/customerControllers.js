@@ -118,6 +118,7 @@ exports.getRestaurantbyName = async (req, res) => {
         restaurantName: req.params.name,
       },
       select: {
+        restaurantId: true,
         category: true,
         openingHours: true,
         restaurantName: true,
@@ -125,8 +126,19 @@ exports.getRestaurantbyName = async (req, res) => {
         location: true,
         photo: true,
         menuItems: true,
+        Subscription: true,
       },
     });
+
+    const x = await prisma.orderReview.aggregate({
+      _avg: { restaurantRating: true },
+      where: {
+        Orders: {
+          restaurantId: Restaurant.restaurantId,
+        },
+      },
+    });
+    Restaurant.rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
     res.status(200).json({
       status: 'success',
       data: {
@@ -594,3 +606,22 @@ exports.openTicket = async (req, res) => {
     });
   }
 };
+
+// exports.getSubscriptions = async (req, res) => {
+//   try {
+//     const subscriptions = await prisma.subscription.findMany({
+//       where: {
+//         restaurantID: req.body.restId,
+//       },
+//     });
+//     res.status(200).json({
+//       status: 'success',
+//       data: { subscriptions },
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       status: 'fail',
+//       message: err.message,
+//     });
+//   }
+// };

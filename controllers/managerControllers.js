@@ -124,6 +124,31 @@ exports.setAvailability = async (req, res) => {
   }
 };
 
+exports.deleteItem = async (req, res) => {
+  try {
+    if (!req.params.name) throw new Error('select a name');
+    const restaurantId = await getRestId(req);
+
+    const deleted = await prisma.menuItems.delete({
+      where: {
+        name_restaurantId: {
+          name: req.params.name,
+          restaurantId,
+        },
+      },
+    });
+    if (deleted)
+      res.status(200).json({
+        status: 'success',
+      });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
 exports.getMenu = async (req, res) => {
   try {
     const restaurantId = await getRestId(req);
@@ -209,6 +234,18 @@ exports.getStaff = async (req, res) => {
       },
     },
   });
+  for (const k of kitStaff) {
+    const x = await prisma.onPrepareOrders.aggregate({
+      where: {
+        Orders: {
+          status: 'ready',
+        },
+        kitchenStaffId: k.userName,
+      },
+      _count: { _all: true },
+    });
+    k.numberOfPreparedOrders = x._count._all;
+  }
   res.status(200).json({
     status: 'success',
     data: { kitStaff },
@@ -260,6 +297,57 @@ exports.createSubscription = async (req, res) => {
   }
 };
 
+exports.editSubscription = async (req, res) => {
+  try {
+    const restaurantID = await getRestId(req);
+    if (!req.body.name) throw new Error('You should select the Subscription');
+    if (req.body.price && isNaN(parseFloat(req.body.price)))
+      throw new Error(
+        'You should enter the price of the subscription as a number'
+      );
+    if (req.body.amount && isNaN(parseFloat(req.body.amount)))
+      throw new Error('You should enter the discount as a number');
+
+    const subData = await prisma.subscription.findFirst({
+      where: {
+        planName: req.body.name,
+        restaurantID,
+      },
+    });
+    const subscription = await prisma.subscription.update({
+      where: {
+        planName_restaurantID: {
+          planName: req.body.name,
+          restaurantID,
+        },
+      },
+      data: {
+        planName: req.body.newName || subData.planName,
+        price: req.body.price || subData.price,
+        amount: req.body.amount || subData.amount,
+        FreeDelivery:
+          req.body.FreeDelivery == null
+            ? subData.FreeDelivery
+            : req.body.FreeDelivery,
+      },
+    });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        subscription,
+      },
+    });
+  } catch (err) {
+    if (err.code === 'P2002') {
+      err.message = 'This subscription name already exist';
+    }
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
 exports.deleteSubscription = async (req, res) => {
   try {
     if (!req.params.name) throw new Error('select a plan');
@@ -283,6 +371,28 @@ exports.deleteSubscription = async (req, res) => {
       message: err.message,
     });
   }
+};
+
+exports.getSubscriptions = async (req, res) => {
+  const restaurantID = await getRestId(req);
+  const subscriptions = await prisma.subscription.findMany({
+    where: {
+      restaurantID,
+    },
+  });
+  for (const s of subscriptions) {
+    const x = await prisma.customerSubscription.aggregate({
+      where: {
+        subscriptionId: s.planName,
+      },
+      _count: { _all: true },
+    });
+    s.numberOfSubscribers = x._count._all;
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { subscriptions },
+  });
 };
 
 exports.createCoupon = async (req, res) => {
@@ -373,7 +483,7 @@ exports.stats = async (req, res) => {
     _sum: { itemsPrice: true },
     where: {
       orderTime: {
-        gt: startOfLastWeek,
+        gt: startOfLastMonth,
         lte: endOfLastMonth,
       },
     },

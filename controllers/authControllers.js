@@ -292,14 +292,14 @@ exports.protect = async (req, res, next) => {
     });
   }
 
-  if (user.passwordChangedAt) {
-    if (parseInt(user.passwordChangedAt.getTime() / 1000, 10) > decoded.iat) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'User changed the password recently please login again',
-      });
-    }
-  }
+  // if (user.passwordChangedAt) {
+  //   if (parseInt(user.passwordChangedAt.getTime() / 1000, 10) > decoded.iat) {
+  //     return res.status(401).json({
+  //       status: 'fail',
+  //       message: 'User changed the password recently please login again',
+  //     });
+  //   }
+  // }
   req.user = user;
   next();
 };
@@ -392,38 +392,5 @@ exports.logout = async (req, res, next) => {
   });
   res.status(200).json({
     status: 'success',
-  });
-};
-
-exports.profile = async (req, res) => {
-  let user;
-  if (req.user.type === 'c' || req.user.type === 's' || req.user.type === 'k')
-    user = await prisma.users.findFirst({
-      where: {
-        userName: req.user.userName,
-      },
-    });
-  else if (req.user.type === 'm') {
-    user = await prisma.users.findFirst({
-      where: {
-        userName: req.user.userName,
-      },
-      include: { restaurantOwner: { include: { Restaurant: true } } },
-    });
-  } else if (req.user.type === 'd') {
-    user = await prisma.users.findFirst({
-      where: {
-        userName: req.user.userName,
-      },
-      include: { deliveryPerson: true },
-    });
-  }
-  user.password = undefined;
-  user.passwordChangedAt = undefined;
-  res.status(200).json({
-    status: 'success',
-    data: {
-      user,
-    },
   });
 };
