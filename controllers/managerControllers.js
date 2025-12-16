@@ -353,11 +353,11 @@ exports.deleteSubscription = async (req, res) => {
     if (!req.params.name) throw new Error('select a plan');
     const restaurantId = await getRestId(req);
 
-    const deleted = await prisma.Subscription.delete({
+    const deleted = await prisma.subscription.delete({
       where: {
         planName_restaurantID: {
-          planName: req.body.name,
           restaurantID: restaurantId,
+          planName: req.params.name,
         },
       },
     });

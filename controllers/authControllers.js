@@ -79,9 +79,9 @@ exports.ownerPhotos = async (req, res, next) => {
 
 const errorMessage = (err) => {
   if (err.code === 'P2002') {
-    if (err.meta.target == 'dbo.Restaurant')
+    if (err.meta.target == 'Restaurant_restaurantName_key')
       return 'This restaurant name already exist';
-    else if (err.meta.target == 'dbo.deliveryPerson')
+    else if (err.meta.target == 'deliveryPerson_id_key')
       return 'This id belongs already to another user';
     else return 'This UserName already exist';
   }
