@@ -401,7 +401,7 @@ exports.subscribe = async (req, res) => {
     });
 
     const { paymentId } = await prisma.payment.create({
-      data: { amount: price, paymentStatus: 'accepted', time: Date.now() },
+      data: { amount: price, paymentStatus: 'accepted', time: new Date() },
     });
 
     const subscription = await prisma.customerSubscription.create({
