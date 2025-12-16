@@ -67,7 +67,7 @@ exports.editItem = async (req, res) => {
         name_restaurantId: { name: req.body.name, restaurantId },
       },
       data: {
-        name: req.body.name || itemData.name,
+        name: req.body.newName || itemData.name,
         discount: req.body.discount || itemData.discount,
         finalPrice: req.body.discount
           ? itemData.price - (req.body.discount / 100) * itemData.price
@@ -100,8 +100,7 @@ exports.setAvailability = async (req, res) => {
     if (req.body.available == null)
       throw new Error('You should enter availability ');
     let x;
-    // if(req.body.availabile==='true') x=true
-    // else x=false
+
     const restaurantId = await getRestId(req);
     console.log(req.body);
     const item = await prisma.menuItems.update({
