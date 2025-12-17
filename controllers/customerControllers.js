@@ -271,8 +271,10 @@ exports.placeOrder = async (req, res) => {
       let paymentStatus;
       if (random > 0.2) paymentStatus = 'accepted';
       else paymentStatus = 'declined';
-      let total;
-
+      let orderPrice;
+      if (subscription && req.body.subscription.FreeDelivery == true)
+        orderPrice = req.body.walletPayment;
+      else orderPrice = parseFloat(req.body.walletPayment) - deliveryFee;
       const { paymentId } = await prisma.payment.create({
         data: {
           amount: totalItems + deliveryFee,
@@ -290,7 +292,7 @@ exports.placeOrder = async (req, res) => {
             status: 'pending',
             customerId: req.user.userName,
             restaurantId: req.body.restId,
-            itemsPrice: req.body.walletPayment,
+            itemsPrice: orderPrice,
           },
         });
 
