@@ -173,7 +173,7 @@ exports.getOrders = async (req, res) => {
   try {
     const restaurantId = await getRestId(req);
     const orders = await prisma.$queryRaw`
-      EXEC GetRestaurantOrders @restaurantId = ${restaurantId}
+      call GetRestaurantOrders @restaurantId = ${restaurantId}
     `;
     // const orders = await prisma.orders.findMany({
     //   where: {
