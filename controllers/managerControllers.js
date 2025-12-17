@@ -172,31 +172,33 @@ exports.getMenu = async (req, res) => {
 exports.getOrders = async (req, res) => {
   try {
     const restaurantId = await getRestId(req);
-
-    const orders = await prisma.orders.findMany({
-      where: {
-        restaurantId,
-      },
-    });
-    for (const o of orders) {
-      const customer = await prisma.users.findFirst({
-        where: {
-          userName: o.customerId,
-        },
-        select: {
-          name: true,
-          phoneNumber: true,
-        },
-      });
-      o.customer = customer;
-      const items = await prisma.orderItems.aggregate({
-        _sum: { quantity: true },
-        where: {
-          orderId: o.orderId,
-        },
-      });
-      o.items = items._sum.quantity;
-    }
+    const orders = await prisma.$queryRaw`
+      EXEC GetRestaurantOrders @restaurantId = ${restaurantId}
+    `;
+    // const orders = await prisma.orders.findMany({
+    //   where: {
+    //     restaurantId,
+    //   },
+    // });
+    // for (const o of orders) {
+    //   const customer = await prisma.users.findFirst({
+    //     where: {
+    //       userName: o.customerId,
+    //     },
+    //     select: {
+    //       name: true,
+    //       phoneNumber: true,
+    //     },
+    //   });
+    //   o.customer = customer;
+    //   const items = await prisma.orderItems.aggregate({
+    //     _sum: { quantity: true },
+    //     where: {
+    //       orderId: o.orderId,
+    //     },
+    //   });
+    //   o.items = items._sum.quantity;
+    // }
     res.status(200).json({
       status: 'success',
       orders,
@@ -298,25 +300,29 @@ exports.addKitchenStaff = async (req, res) => {
 exports.getStaff = async (req, res) => {
   const restaurantId = await getRestId(req);
 
-  const kitStaff = await prisma.users.findMany({
-    where: {
-      kitchenStaff: {
-        restaurantId,
-      },
-    },
-  });
-  for (const k of kitStaff) {
-    const x = await prisma.onPrepareOrders.aggregate({
-      where: {
-        Orders: {
-          status: 'ready',
-        },
-        kitchenStaffId: k.userName,
-      },
-      _count: { _all: true },
-    });
-    k.numberOfPreparedOrders = x._count._all;
-  }
+  const kitStaff = await prisma.$queryRaw`
+      EXEC GetKitchenStaff @restaurantId = ${restaurantId}
+    `;
+
+  // const kitStaff = await prisma.users.findMany({
+  //   where: {
+  //     kitchenStaff: {
+  //       restaurantId,
+  //     },
+  //   },
+  // });
+  // for (const k of kitStaff) {
+  //   const x = await prisma.onPrepareOrders.aggregate({
+  //     where: {
+  //       Orders: {
+  //         status: 'ready',
+  //       },
+  //       kitchenStaffId: k.userName,
+  //     },
+  //     _count: { _all: true },
+  //   });
+  //   k.numberOfPreparedOrders = x._count._all;
+  // }
   res.status(200).json({
     status: 'success',
     data: { kitStaff },
@@ -581,15 +587,10 @@ exports.stats = async (req, res) => {
 
 exports.getRate = async (req, res) => {
   const restaurantId = await getRestId(req);
-  const x = await prisma.orderReview.aggregate({
-    _avg: { restaurantRating: true },
-    where: {
-      Orders: {
-        restaurantId,
-      },
-    },
-  });
-  const rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
+  const [{ rate }] = await prisma.$queryRaw`
+  EXEC GetRestaurantRating @restaurantId = ${restaurantId}
+`;
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -609,11 +610,8 @@ exports.getBalance = async (req, res) => {
     },
   });
 
-  const subRevenue = await prisma.$queryRaw`
-      SELECT SUM(s.price) as total
-      FROM customerSubscription cs
-      JOIN Subscription s ON cs.subscriptionId = s.planName
-      WHERE cs.restaurantId = ${restaurantId}
+  const [{ subRevenue }] = await prisma.$queryRaw`
+     EXEC GetSubscriptionRevenue @restaurantId = ${restaurantId}
     `;
 
   const subLoss = await prisma.paymentWithSubscription.aggregate({

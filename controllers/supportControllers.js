@@ -15,14 +15,44 @@ const staffPhoto = async (req) => {
 };
 
 exports.getAllDelivery = async (req, res) => {
-  const users = await prisma.users.findMany({
-    where: {
-      type: 'd',
-    },
-    include: {
-      deliveryPerson: true,
-    },
-  });
+  const users = await prisma.$queryRaw`exec GetDelivery`;
+
+  // const users = await prisma.users.findMany({
+  //   where: {
+  //     type: 'd',
+  //   },
+  //   include: {
+  //     deliveryPerson: true,
+  //   },
+  // });
+
+  // for (const d of users) {
+  //   const x = await prisma.onDeliverOrders.aggregate({
+  //     where: {
+  //       Orders: {
+  //         status: 'delivered',
+  //       },
+  //       deliveryId: d.userName,
+  //     },
+  //     _count: { _all: true },
+  //   });
+  //   d.numberOfDeliveredOrders = x._count._all;
+
+  //   const y = await prisma.orderReview.aggregate({
+  //     _avg: { deliverRating: true },
+
+  //     where: {
+  //       Orders: {
+  //         onDeliverOrders: {
+  //           deliveryId: d.userName,
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   const rate = y._avg.restaurantRating ? y._avg.restaurantRating : 0;
+  //   d.rate = rate;
+  // }
   res.status(200).json({
     status: 'success',
     data: {
@@ -76,7 +106,7 @@ exports.addSupportStaff = async (req, res) => {
       data: {
         ...staffData,
         type: 's',
-        photo: req.file ? `images/users/${req.body.userName}` : null,
+        photo: req.body.photo || null,
       },
     });
     staffPhoto(req);

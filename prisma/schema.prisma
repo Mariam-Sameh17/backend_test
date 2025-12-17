@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL") 
+  url      = env("DATABASE_URL")
 }
 
 model Coupons {
@@ -103,10 +103,10 @@ model onPrepareOrders {
 model orderItems {
   quantity     Int
   orderId      Int
-  itemName     String     @db.VarChar(20)
+  itemName     String    @db.VarChar(20)
   restaurantId Int?
-  Orders       Orders     @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction)
-  menuItems    menuItems? @relation(fields: [itemName, restaurantId], references: [name, restaurantId], onDelete: Cascade, onUpdate: NoAction)
+  Orders       Orders    @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction)
+  menuItems    menuItems? @relation(fields: [itemName, restaurantId], references: [name, restaurantId], onDelete: Cascade)
 
   @@id([orderId, itemName])
 }

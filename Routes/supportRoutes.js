@@ -30,6 +30,7 @@ router.post(
   authController.protect,
   authController.restrictToSupport,
   authController.uploadPhoto,
+  authController.Photo,
   supportController.addSupportStaff
 );
 

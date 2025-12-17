@@ -62,7 +62,7 @@ exports.sendMessage = async (req, res, next) => {
     const io = socket.getIO();
 
     const orderId = req.body.orderId;
-    io.to(`order_${orderId}`).emit(`messages-group-${orderId}`, {
+    io.emit(`messages-group-${orderId}`, {
       action: 'create',
       message: message,
     });

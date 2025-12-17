@@ -15,15 +15,11 @@ exports.getAllRestaurants = async (req, res) => {
       },
     });
     for (r of Restaurants) {
-      const x = await prisma.orderReview.aggregate({
-        _avg: { restaurantRating: true },
-        where: {
-          Orders: {
-            restaurantId: r.restaurantId,
-          },
-        },
-      });
-      r.rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
+      const [{ rate }] = await prisma.$queryRaw`
+          EXEC GetRestaurantRating @restaurantId = ${r.restaurantId}
+        `;
+
+      r.rate = rate ? rate : 0;
     }
     Restaurants.sort((a, b) => b.rate - a.rate);
 
@@ -81,15 +77,11 @@ exports.getRestaurantbyCategory = async (req, res) => {
       },
     });
     for (r of Restaurants) {
-      const x = await prisma.orderReview.aggregate({
-        _avg: { restaurantRating: true },
-        where: {
-          Orders: {
-            restaurantId: r.restaurantId,
-          },
-        },
-      });
-      r.rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
+      const [{ rate }] = await prisma.$queryRaw`
+          EXEC GetRestaurantRating @restaurantId = ${r.restaurantId}
+        `;
+
+      r.rate = rate ? rate : 0;
     }
     Restaurants.sort((a, b) => b.rate - a.rate);
 
@@ -128,15 +120,12 @@ exports.getRestaurantbyName = async (req, res) => {
       },
     });
 
-    const x = await prisma.orderReview.aggregate({
-      _avg: { restaurantRating: true },
-      where: {
-        Orders: {
-          restaurantId: Restaurant.restaurantId,
-        },
-      },
-    });
-    Restaurant.rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
+    const [{ rate }] = await prisma.$queryRaw`
+          EXEC GetRestaurantRating @restaurantId = ${Restaurant.restaurantId}
+        `;
+
+    Restaurant.rate = rate ? rate : 0;
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -168,18 +157,15 @@ exports.searchRestaurant = async (req, res) => {
         description: true,
         location: true,
         photo: true,
+        restaurantId: true,
       },
     });
     for (r of Restaurants) {
-      const x = await prisma.orderReview.aggregate({
-        _avg: { restaurantRating: true },
-        where: {
-          Orders: {
-            restaurantId: r.restaurantId,
-          },
-        },
-      });
-      r.rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
+      const [{ rate }] = await prisma.$queryRaw`
+          EXEC GetRestaurantRating @restaurantId = ${r.restaurantId}
+        `;
+
+      r.rate = rate ? rate : 0;
     }
     res.status(200).json({
       status: 'success',
@@ -197,6 +183,7 @@ exports.searchRestaurant = async (req, res) => {
 
 exports.paymentPage = async (req, res) => {
   const restaurantID = parseInt(req.params.restId);
+
   const coupons = await prisma.coupons.findMany({
     where: {
       restaurantID,
