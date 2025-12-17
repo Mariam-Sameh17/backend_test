@@ -479,6 +479,9 @@ exports.getOrders = async (req, res) => {
       include: {
         orderItems: true,
       },
+      orderBy: {
+        orderId: 'desc',
+      },
     });
     res.status(200).json({
       status: 'success',
