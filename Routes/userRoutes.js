@@ -21,6 +21,7 @@ router.post(
 router.post(
   '/deliverySignup',
   authController.uploadPhoto,
+  authController.Photo,
   authController.deliverySignup
 );
 
