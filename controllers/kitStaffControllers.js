@@ -111,3 +111,46 @@ exports.finishOrder = async (req, res, next) => {
     });
   }
 };
+
+exports.getOrderDetail = async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.orderId);
+
+    const order = await prisma.orders.findFirst({
+      where: {
+        orderId,
+      },
+      include: {
+        orderItems: true,
+        onPrepareOrders: true,
+      },
+    });
+    const customer = await prisma.users.findFirst({
+      where: {
+        userName: order.customerId,
+      },
+      select: {
+        name: true,
+        phoneNumber: true,
+      },
+    });
+    order.customer = customer;
+    const items = await prisma.orderItems.aggregate({
+      _sum: { quantity: true },
+      where: {
+        orderId: order.orderId,
+      },
+    });
+    order.items = items._sum.quantity;
+
+    res.status(200).json({
+      status: 'success',
+      order,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};

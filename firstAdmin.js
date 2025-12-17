@@ -10,7 +10,8 @@ const createFirstAdmin = async () => {
       password,
       name: 'Mariam',
       email: 'yumrushdb@gmail.com',
-      photo: 'images/users/MariamSamehYasin.jpg',
+      photo:
+        'https://res.cloudinary.com/dhmcbcqj6/image/upload/v1765972538/YumRush/bkq6ug43ef3djfbqcqfr.jpg',
       phoneNumber: '01129553434',
       type: 's',
     },

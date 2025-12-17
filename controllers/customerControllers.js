@@ -299,8 +299,11 @@ exports.placeOrder = async (req, res) => {
         if (req.body.subscription) {
           let x;
           if (req.body.subscription.FreeDelivery == true)
-            x = parseFloat(req.body.subscriptionPayment) + deliveryFee;
-          else x = parseFloat(req.body.subscriptionPayment);
+            x =
+              (totalItems * parseFloat(req.body.subscriptionPayment)) / 100 +
+              deliveryFee;
+          else
+            x = (totalItems * parseFloat(req.body.subscriptionPayment)) / 100;
           const subscription = await prisma.paymentWithSubscription.create({
             data: {
               customerId: req.user.userName,
@@ -317,7 +320,8 @@ exports.placeOrder = async (req, res) => {
             data: {
               paymentId,
               couponId: req.body.couponId,
-              paymentAmount: req.body.couponPayment,
+              paymentAmount:
+                (totalItems * parseFloat(req.body.couponPayment)) / 100,
               orderId: order.orderId,
             },
           });

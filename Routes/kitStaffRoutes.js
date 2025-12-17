@@ -10,6 +10,13 @@ router.get(
   staffController.getOrders
 );
 
+router.get(
+  '/getOrderDetail/:orderId',
+  authController.protect,
+  authController.restrictToStaff,
+  staffController.getOrderDetail
+);
+
 router.patch(
   '/prepare',
   authController.protect,

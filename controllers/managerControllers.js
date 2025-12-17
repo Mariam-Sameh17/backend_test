@@ -22,7 +22,6 @@ exports.addItems = async (req, res) => {
       data: {
         ...itemData,
         photo: req.body.photo || null,
-        finalPrice: itemData.price,
         restaurantId,
       },
     });
@@ -212,7 +211,6 @@ exports.getOrders = async (req, res) => {
 
 exports.getOrderDetail = async (req, res) => {
   try {
-    const restaurantId = await getRestId(req);
     const orderId = parseInt(req.params.orderId);
 
     const order = await prisma.orders.findFirst({

@@ -42,6 +42,10 @@ exports.validateItems = (req) => {
     available: req.body.available === 'true' ? true : false,
     description: req.body.description ? req.body.description : null,
     discount: req.body.discount ? req.body.discount : null,
+    finalPrice: req.body.discount
+      ? parseFloat(req.body.price) -
+        (req.body.discount / 100) * parseFloat(req.body.price)
+      : parseFloat(req.body.price),
   };
   return data;
 };
