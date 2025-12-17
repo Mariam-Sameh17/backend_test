@@ -272,7 +272,7 @@ exports.placeOrder = async (req, res) => {
       if (random > 0.2) paymentStatus = 'accepted';
       else paymentStatus = 'declined';
       let orderPrice;
-      if (subscription && req.body.subscription.FreeDelivery == true)
+      if (req.body.subscription && req.body.subscription.FreeDelivery == true)
         orderPrice = req.body.walletPayment;
       else orderPrice = parseFloat(req.body.walletPayment) - deliveryFee;
       const { paymentId } = await prisma.payment.create({
