@@ -24,4 +24,11 @@ router.patch(
   deliveryControllers.leaveOrder
 );
 
+router.get(
+  '/stats',
+  authController.protect,
+  authController.restrictToDelivery,
+  deliveryControllers.stats
+);
+
 module.exports = router;

@@ -566,7 +566,6 @@ exports.stats = async (req, res) => {
         gt: sevenDaysAgo,
         lte: now,
       },
-      status: 'delivered',
     },
   });
 
@@ -583,7 +582,6 @@ exports.stats = async (req, res) => {
         gt: startOfThisMonth,
         lte: now,
       },
-      status: 'delivered',
     },
   });
 
@@ -595,7 +593,6 @@ exports.stats = async (req, res) => {
         gt: startOfLastMonth,
         lte: endOfLastMonth,
       },
-      status: 'delivered',
     },
   });
 
