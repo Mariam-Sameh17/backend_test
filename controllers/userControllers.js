@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const socket = require('../socketHandler');
 
 exports.sendMessage = async (req, res, next) => {
   try {
@@ -58,14 +59,13 @@ exports.sendMessage = async (req, res, next) => {
         },
       });
     }
+    const io = socket.getIO();
 
-    const socketPayload = {
+    const orderId = req.body.orderId;
+    io.to(`order_${orderId}`).emit(`messages-group-${orderId}`, {
       action: 'create',
-      message,
-    };
-    req.io
-      .to(`order_${req.body.orderId}`)
-      .emit(`messages-group-${req.body.orderId}`, socketPayload);
+      message: message,
+    });
 
     res.status(201).json({
       status: 'success',

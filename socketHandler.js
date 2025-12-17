@@ -1,14 +1,26 @@
-module.exports = (io) => {
-  io.on('connection', (socket) => {
-    socket.on('join_chat', ({ orderId }) => {
-      const roomName = `order_${orderId}`;
-      socket.join(roomName);
-      console.log(`Socket ${socket.id} joined room ${roomName}`);
-    });
+// socket.js
+const { Server } = require('socket.io');
 
-    socket.on('leave_chat', ({ orderId }) => {
-      const roomName = `order_${orderId}`;
-      socket.leave(roomName);
+let io;
+
+module.exports = {
+  // 1. Initialize function (called once in app.js)
+  initializeWebSocketServer: (httpServer) => {
+    io = new Server(httpServer, {
+      cors: {
+        origin: 'http://localhost:5173', // Adjust to your frontend URL
+        methods: ['GET', 'POST'],
+      },
     });
-  });
+    console.log('Socket.io initialized!');
+    return io;
+  },
+
+  // 2. Getter function (called in controllers)
+  getIO: () => {
+    if (!io) {
+      throw new Error('Socket.io is not initialized yet!');
+    }
+    return io;
+  },
 };

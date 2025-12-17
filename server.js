@@ -1,5 +1,6 @@
 const app = require('./app');
 const { PrismaClient } = require('@prisma/client');
+const socket = require('./socketHandler');
 
 const prisma = new PrismaClient();
 
@@ -17,6 +18,8 @@ async function main() {
 
 main();
 const port = process.env.PORT || 3000;
-app.listen(port,'0.0.0.0', () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`app running on port ${port}...`);
 });
+
+socket.initializeWebSocketServer(server);
