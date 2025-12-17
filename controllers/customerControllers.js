@@ -15,10 +15,8 @@ exports.getAllRestaurants = async (req, res) => {
       },
     });
     for (r of Restaurants) {
-      const [{ rate }] = await prisma.$queryRaw`
-          EXEC GetRestaurantRating @restaurantId = ${r.restaurantId}
-        `;
-
+      const [{ f0: rate }] = await prisma.$queryRaw`
+  call GetRestaurantRating (${r.restaurantId})`;
       r.rate = rate ? rate : 0;
     }
     Restaurants.sort((a, b) => b.rate - a.rate);
@@ -77,9 +75,8 @@ exports.getRestaurantbyCategory = async (req, res) => {
       },
     });
     for (r of Restaurants) {
-      const [{ rate }] = await prisma.$queryRaw`
-          EXEC GetRestaurantRating @restaurantId = ${r.restaurantId}
-        `;
+      const [{ f0: rate }] = await prisma.$queryRaw`
+  call GetRestaurantRating (${r.restaurantId})`;
 
       r.rate = rate ? rate : 0;
     }
@@ -120,9 +117,8 @@ exports.getRestaurantbyName = async (req, res) => {
       },
     });
 
-    const [{ rate }] = await prisma.$queryRaw`
-          EXEC GetRestaurantRating @restaurantId = ${Restaurant.restaurantId}
-        `;
+    const [{ f0: rate }] = await prisma.$queryRaw`
+  call GetRestaurantRating (${Restaurant.restaurantId})`;
 
     Restaurant.rate = rate ? rate : 0;
 
@@ -161,9 +157,8 @@ exports.searchRestaurant = async (req, res) => {
       },
     });
     for (r of Restaurants) {
-      const [{ rate }] = await prisma.$queryRaw`
-          EXEC GetRestaurantRating @restaurantId = ${r.restaurantId}
-        `;
+      const [{ f0: rate }] = await prisma.$queryRaw`
+  call GetRestaurantRating (${r.restaurantId})`;
 
       r.rate = rate ? rate : 0;
     }

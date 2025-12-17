@@ -15,7 +15,22 @@ const staffPhoto = async (req) => {
 };
 
 exports.getAllDelivery = async (req, res) => {
-  const users = await prisma.$queryRaw`exec GetDelivery`;
+  const usersData = await prisma.$queryRaw`call GetDelivery`;
+  console.log('DEBUG RAW USER:', usersData[0]);
+  const users = usersData.map((u) => ({
+    userName: u.f0,
+    name: u.f1,
+    photo: u.f3,
+    email: u.f4,
+    phoneNumber: u.f5,
+    type: u.f6,
+    bankId: u.f9,
+    vehicleType: u.f10,
+    licenseNumber: u.f11,
+    deliveryPersonId: u.f12,
+    numberOfDeliveredOrders: Number(u.f13),
+    rate: parseFloat(u.f14) || 0,
+  }));
 
   // const users = await prisma.users.findMany({
   //   where: {

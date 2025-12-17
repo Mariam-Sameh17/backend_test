@@ -172,9 +172,27 @@ exports.getMenu = async (req, res) => {
 exports.getOrders = async (req, res) => {
   try {
     const restaurantId = await getRestId(req);
-    const orders = await prisma.$queryRaw`
+    const ordersData = await prisma.$queryRaw`
       call GetRestaurantOrders(${restaurantId})
     `;
+
+    const orders = ordersData.map((o) => ({
+      orderId: o.f0,
+      location: o.f1,
+      orderTime: o.f2,
+      itemsPrice: o.f3,
+      deliveryFee: o.f4,
+      status: o.f5,
+      customerId: o.f6,
+      restaurantId: o.f7,
+
+      customer: {
+        name: o.f8,
+        phoneNumber: o.f9,
+      },
+
+      items: Number(o.f10),
+    }));
     // const orders = await prisma.orders.findMany({
     //   where: {
     //     restaurantId,
@@ -300,10 +318,19 @@ exports.addKitchenStaff = async (req, res) => {
 exports.getStaff = async (req, res) => {
   const restaurantId = await getRestId(req);
 
-  const kitStaff = await prisma.$queryRaw`
-      EXEC GetKitchenStaff @restaurantId = ${restaurantId}
+  const kitStaffData = await prisma.$queryRaw`
+      call GetKitchenStaff (${restaurantId})
     `;
-
+  const kitStaff = kitStaffData.map((s) => ({
+    userName: s.f0,
+    name: s.f1,
+    photo: s.f3,
+    email: s.f4,
+    phoneNumber: s.f5,
+    type: s.f6,
+    passwordChangedAt: s.f7,
+    numberOfPreparedOrders: Number(s.f8),
+  }));
   // const kitStaff = await prisma.users.findMany({
   //   where: {
   //     kitchenStaff: {
@@ -587,8 +614,8 @@ exports.stats = async (req, res) => {
 
 exports.getRate = async (req, res) => {
   const restaurantId = await getRestId(req);
-  const [{ rate }] = await prisma.$queryRaw`
-  EXEC GetRestaurantRating @restaurantId = ${restaurantId}
+  const [{ f0: rate }] = await prisma.$queryRaw`
+  call GetRestaurantRating (${restaurantId})
 `;
 
   res.status(200).json({
@@ -606,12 +633,11 @@ exports.getBalance = async (req, res) => {
     _sum: { itemsPrice: true },
     where: {
       restaurantId,
-      status: 'delivered',
     },
   });
 
-  const [{ subRevenue }] = await prisma.$queryRaw`
-     EXEC GetSubscriptionRevenue @restaurantId = ${restaurantId}
+  const [{ f0: subRevenue }] = await prisma.$queryRaw`
+     call GetSubscriptionRevenue (${restaurantId})
     `;
 
   const subLoss = await prisma.paymentWithSubscription.aggregate({
