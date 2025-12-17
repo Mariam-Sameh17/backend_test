@@ -79,10 +79,7 @@ exports.getAllDelivery = async (req, res) => {
 exports.getAllTickets = async (req, res) => {
   const tickets = await prisma.tickets.findMany({
     where: {
-      status: { in: ['solved', 'not solved'] },
-      proccessedTickets: {
-        supportId: req.body.userName,
-      },
+      status: 'not solved',
     },
   });
   res.status(200).json({
