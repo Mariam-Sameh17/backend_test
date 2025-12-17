@@ -30,6 +30,24 @@ exports.getOrders = async (req, res, next) => {
       ],
     },
   });
+  for (const o of orders) {
+    const customer = await prisma.users.findFirst({
+      where: {
+        userName: o.customerId,
+      },
+      select: {
+        name: true,
+      },
+    });
+    o.customer = customer;
+    const items = await prisma.orderItems.aggregate({
+      _sum: { quantity: true },
+      where: {
+        orderId: o.orderId,
+      },
+    });
+    o.items = items._sum.quantity;
+  }
   res.status(200).json({
     status: 'success',
     data: {
