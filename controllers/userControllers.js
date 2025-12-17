@@ -59,6 +59,14 @@ exports.sendMessage = async (req, res, next) => {
       });
     }
 
+    const socketPayload = {
+      action: 'create',
+      message,
+    };
+    req.io
+      .to(`order_${req.body.orderId}`)
+      .emit(`messages-group-${req.body.orderId}`, socketPayload);
+
     res.status(201).json({
       status: 'success',
       data: { message },

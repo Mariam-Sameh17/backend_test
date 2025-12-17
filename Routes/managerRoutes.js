@@ -57,6 +57,13 @@ router.get(
 );
 
 router.get(
+  '/getOrderDetail/:orderId',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.getOrderDetail
+);
+
+router.get(
   '/getStaff',
   authController.protect,
   authController.restrictToOwner,
@@ -98,6 +105,20 @@ router.get(
   authController.protect,
   authController.restrictToOwner,
   managerController.getSubscriptions
+);
+
+router.get(
+  '/getRate',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.getRate
+);
+
+router.get(
+  '/getBalance',
+  authController.protect,
+  authController.restrictToOwner,
+  managerController.getBalance
 );
 
 router.delete(

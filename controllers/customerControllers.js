@@ -1,6 +1,4 @@
 const { PrismaClient } = require('@prisma/client');
-const { connect } = require('mssql');
-const { Photo } = require('./authControllers');
 const prisma = new PrismaClient();
 
 exports.getAllRestaurants = async (req, res) => {
@@ -267,16 +265,17 @@ exports.placeOrder = async (req, res) => {
       throw new Error('at least select an item');
     if (!req.body.number) throw new Error('You should select a payment method');
     const orderData = await prisma.$transaction(async (prisma) => {
-      const total = parseFloat(req.body.total);
+      const totalItems = parseFloat(req.body.total);
       const deliveryFee = parseFloat(req.body.deliveryFee);
       const random = Math.random();
       let paymentStatus;
       if (random > 0.2) paymentStatus = 'accepted';
       else paymentStatus = 'declined';
+      let total;
 
       const { paymentId } = await prisma.payment.create({
         data: {
-          amount: total,
+          amount: totalItems + deliveryFee,
           paymentStatus: paymentStatus,
           time: new Date(),
         },
@@ -291,18 +290,22 @@ exports.placeOrder = async (req, res) => {
             status: 'pending',
             customerId: req.user.userName,
             restaurantId: req.body.restId,
-            itemsPrice: total - deliveryFee,
+            itemsPrice: req.body.walletPayment,
           },
         });
 
         if (req.body.subscription) {
+          let x;
+          if (req.body.subscription.FreeDelivery == true)
+            x = parseFloat(req.body.subscriptionPayment) + deliveryFee;
+          else x = parseFloat(req.body.subscriptionPayment);
           const subscription = await prisma.paymentWithSubscription.create({
             data: {
               customerId: req.user.userName,
               paymentId,
               subscriptionId: req.body.subscription.planName,
               restaurantID: req.body.restId,
-              paymentAmount: req.body.subscriptionPayment,
+              paymentAmount: x,
               orderId: order.orderId,
             },
           });
@@ -524,6 +527,7 @@ exports.getOrderDetails = async (req, res) => {
 
 exports.tip = async (req, res) => {
   try {
+    console.log(req.body);
     if (req.body.tips)
       if (!isNaN(parseFloat(req.body.tips)))
         await prisma.onDeliverOrders.update({
@@ -606,22 +610,3 @@ exports.openTicket = async (req, res) => {
     });
   }
 };
-
-// exports.getSubscriptions = async (req, res) => {
-//   try {
-//     const subscriptions = await prisma.subscription.findMany({
-//       where: {
-//         restaurantID: req.body.restId,
-//       },
-//     });
-//     res.status(200).json({
-//       status: 'success',
-//       data: { subscriptions },
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       status: 'fail',
-//       message: err.message,
-//     });
-//   }
-// };

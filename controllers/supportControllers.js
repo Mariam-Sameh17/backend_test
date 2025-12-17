@@ -50,6 +50,17 @@ exports.getAllTickets = async (req, res) => {
 
 exports.getAllRestaurants = async (req, res) => {
   const restaurants = await prisma.restaurant.findMany();
+  for (r of restaurants) {
+    const x = await prisma.orderReview.aggregate({
+      _avg: { restaurantRating: true },
+      where: {
+        Orders: {
+          restaurantId: r.restaurantId,
+        },
+      },
+    });
+    r.rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
+  }
   res.status(200).json({
     status: 'success',
     data: {

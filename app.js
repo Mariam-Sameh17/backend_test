@@ -2,6 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const userRouter = require('./Routes/userRoutes');
 const supportRouter = require('./Routes/supportRoutes');
 const customerRouter = require('./Routes/customerRoutes');
@@ -12,6 +14,18 @@ const deliveryRouter = require('./Routes/deliveryRoutes');
 const app = express();
 
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
+
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+require('./socketHandler')(io);
+
+server.listen(4000);
 
 app.use(express.json());
 

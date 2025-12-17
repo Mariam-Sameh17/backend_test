@@ -179,9 +179,82 @@ exports.getOrders = async (req, res) => {
         restaurantId,
       },
     });
+    for (const o of orders) {
+      const customer = await prisma.users.findFirst({
+        where: {
+          userName: o.customerId,
+        },
+        select: {
+          name: true,
+          phoneNumber: true,
+        },
+      });
+      o.customer = customer;
+      const items = await prisma.orderItems.aggregate({
+        _sum: { quantity: true },
+        where: {
+          orderId: o.orderId,
+        },
+      });
+      o.items = items._sum.quantity;
+    }
     res.status(200).json({
       status: 'success',
       orders,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.getOrderDetail = async (req, res) => {
+  try {
+    const restaurantId = await getRestId(req);
+    const orderId = parseInt(req.params.orderId);
+
+    const order = await prisma.orders.findFirst({
+      where: {
+        orderId,
+      },
+      include: {
+        orderItems: true,
+        onPrepareOrders: true,
+      },
+    });
+    const customer = await prisma.users.findFirst({
+      where: {
+        userName: order.customerId,
+      },
+      select: {
+        name: true,
+        phoneNumber: true,
+      },
+    });
+    order.customer = customer;
+    const items = await prisma.orderItems.aggregate({
+      _sum: { quantity: true },
+      where: {
+        orderId: order.orderId,
+      },
+    });
+    order.items = items._sum.quantity;
+    if (order.status === 'preparing' || order.status === 'ready') {
+      const staff = await prisma.users.findFirst({
+        where: {
+          userName: order.onPrepareOrders.kitchenStaffId,
+        },
+        select: {
+          name: true,
+        },
+      });
+      order.staff = staff;
+    }
+    res.status(200).json({
+      status: 'success',
+      order,
     });
   } catch (err) {
     res.status(400).json({
@@ -457,10 +530,12 @@ exports.stats = async (req, res) => {
     _sum: { itemsPrice: true },
     _count: { orderId: true },
     where: {
+      restaurantId,
       orderTime: {
         gt: sevenDaysAgo,
         lte: now,
       },
+      status: 'delivered',
     },
   });
 
@@ -472,20 +547,24 @@ exports.stats = async (req, res) => {
   const monthRevenue = await prisma.orders.aggregate({
     _sum: { itemsPrice: true },
     where: {
+      restaurantId,
       orderTime: {
         gt: startOfThisMonth,
         lte: now,
       },
+      status: 'delivered',
     },
   });
 
   const lastMonthRevenue = await prisma.orders.aggregate({
     _sum: { itemsPrice: true },
     where: {
+      restaurantId,
       orderTime: {
         gt: startOfLastMonth,
         lte: endOfLastMonth,
       },
+      status: 'delivered',
     },
   });
 
@@ -498,6 +577,71 @@ exports.stats = async (req, res) => {
       revenuePerSevenDays,
       monthRevenue,
       lastMonthRevenue,
+    },
+  });
+};
+
+exports.getRate = async (req, res) => {
+  const restaurantId = await getRestId(req);
+  const x = await prisma.orderReview.aggregate({
+    _avg: { restaurantRating: true },
+    where: {
+      Orders: {
+        restaurantId,
+      },
+    },
+  });
+  const rate = x._avg.restaurantRating ? x._avg.restaurantRating : 0;
+  res.status(200).json({
+    status: 'success',
+    data: {
+      rate,
+    },
+  });
+};
+
+exports.getBalance = async (req, res) => {
+  const restaurantId = await getRestId(req);
+
+  const ordersRevenue = await prisma.orders.aggregate({
+    _sum: { itemsPrice: true },
+    where: {
+      restaurantId,
+      status: 'delivered',
+    },
+  });
+
+  const subRevenue = await prisma.$queryRaw`
+      SELECT SUM(s.price) as total
+      FROM customerSubscription cs
+      JOIN Subscription s ON cs.subscriptionId = s.planName
+      WHERE cs.restaurantId = ${restaurantId}
+    `;
+
+  const subLoss = await prisma.paymentWithSubscription.aggregate({
+    _sum: { paymentAmount: true },
+    where: {
+      Orders: {
+        restaurantId,
+      },
+    },
+  });
+  const couponsLoss = await prisma.paymentWithCoupons.aggregate({
+    _sum: { paymentAmount: true },
+    where: {
+      Orders: {
+        restaurantId,
+      },
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      ordersRevenue,
+      subRevenue,
+      subLoss,
+      couponsLoss,
     },
   });
 };
