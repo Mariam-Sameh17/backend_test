@@ -8,6 +8,9 @@ exports.validateUser = async (req) => {
   if (!req.body.phoneNumber)
     throw new Error('You sould enter your phoneNumber');
 
+  if (req.body.phoneNumber.length != 15)
+    throw new Error('The phoneNumber must be 15 digits');
+
   if (!req.body.password) throw new Error('You sould enter your password');
 
   if (!req.body.name) throw new Error('You sould enter your name');
