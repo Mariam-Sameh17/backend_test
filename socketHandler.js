@@ -8,7 +8,7 @@ module.exports = {
   initializeWebSocketServer: (httpServer) => {
     io = new Server(httpServer, {
       cors: {
-        origin: ['http://localhost:5173', 'https://yumrush-m.netlify.app/'],
+        origin: ['http://localhost:5173', 'https://yumrush-m.netlify.app'],
         methods: ['GET', 'POST'],
       },
     });
