@@ -28,7 +28,6 @@ const corsOptions = {
   credentials: true,
 };
 
-// Apply it
 app.use(cors(corsOptions));
 
 app.use(express.static(`${__dirname}/images`));

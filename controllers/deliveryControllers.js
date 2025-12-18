@@ -108,6 +108,7 @@ exports.stats = async (req, res) => {
       onDeliverOrders: {
         deliveryId: req.user.userName,
       },
+      status: 'delivered',
     },
   });
 
