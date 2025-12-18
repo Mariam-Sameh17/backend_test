@@ -526,7 +526,6 @@ exports.getOrderDetails = async (req, res) => {
 
 exports.tip = async (req, res) => {
   try {
-    console.log(req.body);
     if (req.body.tips)
       if (!isNaN(parseFloat(req.body.tips)))
         await prisma.onDeliverOrders.update({

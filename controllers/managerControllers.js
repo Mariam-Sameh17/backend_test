@@ -101,7 +101,6 @@ exports.setAvailability = async (req, res) => {
     let x;
 
     const restaurantId = await getRestId(req);
-    console.log(req.body);
     const item = await prisma.menuItems.update({
       where: {
         name_restaurantId: { name: req.body.name, restaurantId },

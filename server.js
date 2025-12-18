@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 async function main() {
   try {
     console.log('Connecting to database...');
+
     const customers = await prisma.Users.findMany();
     console.log('Connection Successful!');
   } catch (error) {

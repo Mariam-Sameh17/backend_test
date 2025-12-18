@@ -95,7 +95,6 @@ exports.stats = async (req, res) => {
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(now.getDate() - 7);
-  console.log(now, '  ', yesterdayEnd);
 
   const todayEarning = await prisma.orders.aggregate({
     _sum: {

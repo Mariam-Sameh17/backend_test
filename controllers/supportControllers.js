@@ -16,7 +16,7 @@ const staffPhoto = async (req) => {
 
 exports.getAllDelivery = async (req, res) => {
   const usersData = await prisma.$queryRaw`call GetDelivery`;
-  console.log('DEBUG RAW USER:', usersData[0]);
+
   const users = usersData.map((u) => ({
     userName: u.f0,
     name: u.f1,
