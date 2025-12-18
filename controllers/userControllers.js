@@ -19,7 +19,7 @@ exports.sendMessage = async (req, res, next) => {
 
     if (
       req.user.type == 'd' ||
-      (req.user.type == 'c' && status == 'on delivery')
+      (req.user.type == 'c' && status == 'on-delivery')
     ) {
       message = await prisma.deliveryChat.create({
         data: {
@@ -92,7 +92,7 @@ exports.getMessages = async (req, res) => {
   let messages;
   if (
     req.user.type == 'd' ||
-    (req.user.type == 'c' && status == 'on delivery')
+    (req.user.type == 'c' && status == 'on-delivery')
   ) {
     await prisma.deliveryChat.updateMany({
       where: {
