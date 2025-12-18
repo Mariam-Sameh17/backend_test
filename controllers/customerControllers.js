@@ -491,6 +491,7 @@ exports.getOrderDetails = async (req, res) => {
       },
 
       select: {
+        restaurantId: true,
         quantity: true,
         menuItems: {
           select: {
@@ -501,12 +502,19 @@ exports.getOrderDetails = async (req, res) => {
         },
       },
     });
+    const { restaurantName } = await prisma.restaurant.findFirst({
+      where: {
+        restaurantId: order.restaurantId,
+      },
+    });
+
     order.map((i) => {
       i.totalPrice = i.quantity * i.menuItems.price;
     });
     res.status(200).json({
       status: 'success',
       order,
+      restaurantName,
     });
   } catch (err) {
     res.status(400).json({
