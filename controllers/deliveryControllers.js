@@ -156,18 +156,19 @@ exports.stats = async (req, res) => {
     },
   });
 
-  const { rate, numberOfRates } = await prisma.orderReview.aggregate({
-    _avg: { deliverRating: true },
-    _count: { _all: true },
-    where: {
-      deliverRating: { not: null },
-      Orders: {
-        onDeliverOrders: {
-          deliveryId: req.user.userName,
+  const { _avg: rate, _count: numberOfRates } =
+    await prisma.orderReview.aggregate({
+      _avg: { deliverRating: true },
+      _count: { _all: true },
+      where: {
+        deliverRating: { not: null },
+        Orders: {
+          onDeliverOrders: {
+            deliveryId: req.user.userName,
+          },
         },
       },
-    },
-  });
+    });
 
   const recent = await prisma.orders.findMany({
     where: {
