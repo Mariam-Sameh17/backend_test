@@ -82,10 +82,18 @@ exports.getAllTickets = async (req, res) => {
       status: 'not solved',
     },
   });
+
+  const { _count: resolvedTickets } = await prisma.proccessedTickets.aggregate({
+    _count: { _all: true },
+    where: {
+      supportId: req.user.userName,
+    },
+  });
   res.status(200).json({
     status: 'success',
     data: {
       tickets,
+      resolvedTickets,
     },
   });
 };
