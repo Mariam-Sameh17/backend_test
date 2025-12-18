@@ -504,7 +504,7 @@ exports.getOrderDetails = async (req, res) => {
     });
     const { restaurantName } = await prisma.restaurant.findFirst({
       where: {
-        restaurantId: order.restaurantId,
+        restaurantId: order[0].restaurantId,
       },
     });
 
