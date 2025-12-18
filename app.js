@@ -24,7 +24,7 @@ BigInt.prototype.toJSON = function () {
 };
 
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173','https://yumrush-m.netlify.app/'],
   credentials: true,
 };
 
