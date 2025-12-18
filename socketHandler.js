@@ -1,10 +1,8 @@
-// socket.js
 const { Server } = require('socket.io');
 
 let io;
 
 module.exports = {
-  // 1. Initialize function (called once in app.js)
   initializeWebSocketServer: (httpServer) => {
     io = new Server(httpServer, {
       cors: {
@@ -16,7 +14,6 @@ module.exports = {
     return io;
   },
 
-  // 2. Getter function (called in controllers)
   getIO: () => {
     if (!io) {
       throw new Error('Socket.io is not initialized yet!');
