@@ -112,7 +112,7 @@ exports.stats = async (req, res) => {
     },
   });
 
-  const weakEarning = await prisma.orders.aggregate({
+  const weekEarning = await prisma.orders.aggregate({
     _sum: { deliveryFee: true },
     where: {
       orderTime: {
@@ -203,7 +203,7 @@ exports.stats = async (req, res) => {
     status: 'success',
     data: {
       todayEarning,
-      weakEarning,
+      weekEarning,
       totalDeliveries,
       tips,
       summary,
