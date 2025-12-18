@@ -197,6 +197,9 @@ exports.stats = async (req, res) => {
       },
     });
     r.customer = name;
+    r.customerId = undefined;
+    r.orderReview.customerId = undefined;
+    r.orderReview.restaurantRating = undefined;
   }
 
   res.status(200).json({
