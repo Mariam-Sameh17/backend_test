@@ -2,7 +2,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
@@ -15,6 +14,8 @@ model Coupons {
   available_uses     Int
   Restaurant         Restaurant           @relation(fields: [restaurantID], references: [restaurantId], onUpdate: NoAction)
   paymentWithCoupons paymentWithCoupons[]
+
+  @@index([restaurantID], map: "Coupons_restaurantID_fkey")
 }
 
 model customerAddress {
@@ -23,6 +24,7 @@ model customerAddress {
   Customer   Users  @relation(fields: [customerId], references: [userName], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([location, customerId])
+  @@index([customerId], map: "customerAddress_customerId_fkey")
 }
 
 model customerSubscription {
@@ -38,6 +40,8 @@ model customerSubscription {
   paymentWithSubscription paymentWithSubscription[]
 
   @@id([customerId, subscriptionId, restaurantID])
+  @@index([paymentId], map: "customerSubscription_paymentId_fkey")
+  @@index([subscriptionId, restaurantID], map: "customerSubscription_subscriptionId_restaurantID_fkey")
 }
 
 model deliveryChat {
@@ -48,6 +52,8 @@ model deliveryChat {
   SRFlag    String   @db.Char(1)
   orderId   Int?
   Orders    Orders?  @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([orderId], map: "deliveryChat_orderId_fkey")
 }
 
 model deliveryPerson {
@@ -66,6 +72,8 @@ model kitchenStaff {
   Restaurant      Restaurant        @relation(fields: [restaurantId], references: [restaurantId], onUpdate: NoAction)
   Users           Users             @relation(fields: [userName], references: [userName], onDelete: Cascade, onUpdate: NoAction)
   onPrepareOrders onPrepareOrders[]
+
+  @@index([restaurantId], map: "kitchenStaff_restaurantId_fkey")
 }
 
 model menuItems {
@@ -82,6 +90,7 @@ model menuItems {
   orderItems   orderItems[]
 
   @@id([name, restaurantId])
+  @@index([restaurantId], map: "menuItems_restaurantId_fkey")
 }
 
 model onDeliverOrders {
@@ -91,6 +100,8 @@ model onDeliverOrders {
   orderId        Int            @id
   deliveryPerson deliveryPerson @relation(fields: [deliveryId], references: [userName], onUpdate: NoAction)
   Orders         Orders         @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([deliveryId], map: "onDeliverOrders_deliveryId_fkey")
 }
 
 model onPrepareOrders {
@@ -99,17 +110,20 @@ model onPrepareOrders {
   orderId        Int          @id
   kitchenStaff   kitchenStaff @relation(fields: [kitchenStaffId], references: [userName], onDelete: Cascade, onUpdate: NoAction)
   Orders         Orders       @relation(fields: [orderId], references: [orderId], onUpdate: NoAction)
+
+  @@index([kitchenStaffId], map: "onPrepareOrders_kitchenStaffId_fkey")
 }
 
 model orderItems {
   quantity     Int
   orderId      Int
-  itemName     String    @db.VarChar(20)
+  itemName     String     @db.VarChar(20)
   restaurantId Int?
-  Orders       Orders    @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction)
   menuItems    menuItems? @relation(fields: [itemName, restaurantId], references: [name, restaurantId], onDelete: Cascade)
+  Orders       Orders     @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([orderId, itemName])
+  @@index([itemName, restaurantId], map: "orderItems_itemName_restaurantId_fkey")
 }
 
 model orderReview {
@@ -119,6 +133,8 @@ model orderReview {
   orderId          Int      @id
   Customer         Users    @relation(fields: [customerId], references: [userName], onUpdate: NoAction)
   Orders           Orders   @relation(fields: [orderId], references: [orderId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([customerId], map: "orderReview_customerId_fkey")
 }
 
 model Orders {
@@ -130,23 +146,26 @@ model Orders {
   status                  String                    @db.VarChar(20)
   customerId              String                    @db.VarChar(50)
   restaurantId            Int
+  Customer                Users                     @relation(fields: [customerId], references: [userName], onUpdate: NoAction)
+  Restaurant              Restaurant                @relation(fields: [restaurantId], references: [restaurantId], onUpdate: NoAction)
   deliveryChat            deliveryChat[]
   onDeliverOrders         onDeliverOrders?
   onPrepareOrders         onPrepareOrders?
   orderItems              orderItems[]
   orderReview             orderReview?
-  Customer                Users                     @relation(fields: [customerId], references: [userName], onUpdate: NoAction)
-  Restaurant              Restaurant                @relation(fields: [restaurantId], references: [restaurantId], onUpdate: NoAction)
   paymentWithCard_Wallet  paymentWithCard_Wallet[]
   paymentWithCoupons      paymentWithCoupons[]
   paymentWithSubscription paymentWithSubscription[]
   restaurantChat          restaurantChat[]
+
+  @@index([customerId], map: "Orders_customerId_fkey")
+  @@index([restaurantId], map: "Orders_restaurantId_fkey")
 }
 
 model Payment {
-  paymentId               Int                       @id @default(autoincrement())
-  amount                  Decimal                   @db.Decimal(10, 2)
-  paymentStatus           String                    @db.VarChar(20)
+  paymentId               Int                      @id @default(autoincrement())
+  amount                  Decimal                  @db.Decimal(10, 2)
+  paymentStatus           String                   @db.VarChar(20)
   time                    DateTime
   customerSubscription    customerSubscription[]
   paymentWithCard_Wallet  paymentWithCard_Wallet?
@@ -160,9 +179,12 @@ model paymentWithCard_Wallet {
   customerId    String        @db.VarChar(50)
   number        String        @db.VarChar(20)
   orderId       Int?
+  Wallets_Cards Wallets_Cards @relation(fields: [number, customerId], references: [number, customerId], onUpdate: NoAction)
   Orders        Orders?       @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction)
   Payment       Payment       @relation(fields: [paymentId], references: [paymentId], onDelete: Cascade, onUpdate: NoAction)
-  Wallets_Cards Wallets_Cards @relation(fields: [number, customerId], references: [number, customerId], onUpdate: NoAction)
+
+  @@index([number, customerId], map: "paymentWithCard_Wallet_number_customerId_fkey")
+  @@index([orderId], map: "paymentWithCard_Wallet_orderId_fkey")
 }
 
 model paymentWithCoupons {
@@ -173,6 +195,9 @@ model paymentWithCoupons {
   Coupons       Coupons @relation(fields: [couponId], references: [couponId], onUpdate: NoAction)
   Orders        Orders? @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction)
   Payment       Payment @relation(fields: [paymentId], references: [paymentId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([couponId], map: "paymentWithCoupons_couponId_fkey")
+  @@index([orderId], map: "paymentWithCoupons_orderId_fkey")
 }
 
 model paymentWithSubscription {
@@ -182,9 +207,12 @@ model paymentWithSubscription {
   subscriptionId       String               @db.VarChar(50)
   restaurantID         Int
   orderId              Int?
+  customerSubscription customerSubscription @relation(fields: [customerId, subscriptionId, restaurantID], references: [customerId, subscriptionId, restaurantID], onDelete: Cascade, onUpdate: NoAction)
   Orders               Orders?              @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction)
   Payment              Payment              @relation(fields: [paymentId], references: [paymentId], onDelete: Cascade, onUpdate: NoAction)
-  customerSubscription customerSubscription @relation(fields: [customerId, subscriptionId, restaurantID], references: [customerId, subscriptionId, restaurantID], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([customerId, subscriptionId, restaurantID], map: "paymentWithSubscription_customerId_subscriptionId_restauran_fkey")
+  @@index([orderId], map: "paymentWithSubscription_orderId_fkey")
 }
 
 model proccessedTickets {
@@ -194,23 +222,27 @@ model proccessedTickets {
   supportId       String?  @db.VarChar(50)
   supportStaff    Users?   @relation(fields: [supportId], references: [userName], onDelete: NoAction, onUpdate: NoAction)
   Tickets         Tickets  @relation(fields: [ticketId], references: [ticketId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([supportId], map: "proccessedTickets_supportId_fkey")
 }
 
 model Restaurant {
-  restaurantId    Int               @id @default(autoincrement())
-  category        String            @db.VarChar(50)
-  photo           String?           @db.VarChar(100)
-  openingHours    String            @db.VarChar(20)
-  restaurantName  String            @unique @db.VarChar(50)
-  description     String?           @db.VarChar(200)
-  location        String            @db.VarChar(100)
-  managerID       String            @db.VarChar(50)
+  restaurantId    Int             @id @default(autoincrement())
+  category        String          @db.VarChar(50)
+  photo           String?         @db.VarChar(100)
+  openingHours    String          @db.VarChar(20)
+  restaurantName  String          @unique @db.VarChar(50)
+  description     String?         @db.VarChar(200)
+  location        String          @db.VarChar(100)
+  managerID       String          @db.VarChar(50)
   Coupons         Coupons[]
+  Orders          Orders[]
+  restaurantOwner restaurantOwner @relation(fields: [managerID], references: [userName], onDelete: Cascade, onUpdate: NoAction)
+  Subscription    Subscription[]
   kitchenStaff    kitchenStaff[]
   menuItems       menuItems[]
-  Orders          Orders[]
-  restaurantOwner restaurantOwner   @relation(fields: [managerID], references: [userName], onDelete: Cascade, onUpdate: NoAction)
-  Subscription    Subscription[]
+
+  @@index([managerID], map: "Restaurant_managerID_fkey")
 }
 
 model restaurantChat {
@@ -221,6 +253,8 @@ model restaurantChat {
   SRFlag    String   @db.Char(1)
   orderId   Int?
   Orders    Orders?  @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([orderId], map: "restaurantChat_orderId_fkey")
 }
 
 model restaurantOwner {
@@ -237,10 +271,11 @@ model Subscription {
   amount               Decimal                @db.Decimal(10, 2)
   FreeDelivery         Boolean?
   period               Int
-  customerSubscription customerSubscription[]
   Restaurant           Restaurant             @relation(fields: [restaurantID], references: [restaurantId], onUpdate: NoAction)
+  customerSubscription customerSubscription[]
 
   @@id([planName, restaurantID])
+  @@index([restaurantID], map: "Subscription_restaurantID_fkey")
 }
 
 model Tickets {
@@ -250,18 +285,21 @@ model Tickets {
   status            String             @db.VarChar(20)
   createdAt         DateTime?
   customerId        String             @db.VarChar(50)
-  proccessedTickets proccessedTickets?
   Customer          Users              @relation(fields: [customerId], references: [userName], onUpdate: NoAction)
+  proccessedTickets proccessedTickets?
+
+  @@index([customerId], map: "Tickets_customerId_fkey")
 }
 
 model Wallets_Cards {
   number                 String                   @db.VarChar(20)
   type                   String                   @db.VarChar(10)
   customerId             String                   @db.VarChar(50)
-  paymentWithCard_Wallet paymentWithCard_Wallet[]
   Customer               Users                    @relation(fields: [customerId], references: [userName], onDelete: Cascade, onUpdate: NoAction)
+  paymentWithCard_Wallet paymentWithCard_Wallet[]
 
   @@id([number, customerId])
+  @@index([customerId], map: "Wallets_Cards_customerId_fkey")
 }
 
 model Users {
@@ -273,14 +311,14 @@ model Users {
   phoneNumber          String                 @db.VarChar(15)
   type                 String                 @db.Char(1)
   passwordChangedAt    DateTime?
+  Orders               Orders[]
+  Tickets              Tickets[]
+  Wallets_Cards        Wallets_Cards[]
   customerAddress      customerAddress[]
   customerSubscription customerSubscription[]
   deliveryPerson       deliveryPerson?
   kitchenStaff         kitchenStaff?
   orderReview          orderReview[]
-  Orders               Orders[]
   proccessedTickets    proccessedTickets[]
   restaurantOwner      restaurantOwner?
-  Tickets              Tickets[]
-  Wallets_Cards        Wallets_Cards[]
 }

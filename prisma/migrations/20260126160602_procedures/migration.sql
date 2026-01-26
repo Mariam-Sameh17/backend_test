@@ -1,4 +1,3 @@
-
 DROP PROCEDURE IF EXISTS GetSubscriptionRevenue;
 CREATE PROCEDURE GetSubscriptionRevenue(IN p_restaurantId INT)
 BEGIN
