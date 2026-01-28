@@ -1,0 +1,22 @@
+name: Database Heartbeat
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allows you to run it manually to test
+
+jobs:
+  ping_database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install MySQL Client
+        run: sudo apt-get install -y mysql-client
+
+      - name: Ping Database (Select 1)
+        run: |
+          mysql -h ${{ secrets.DB_HOST }} \
+                -P ${{ secrets.DB_PORT }} \
+                -u ${{ secrets.DB_USER }} \
+                -p"${{ secrets.DB_PASSWORD }}" \
+                --ssl-mode=REQUIRED \
+                -e "SELECT 1;"
